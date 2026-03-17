@@ -4,6 +4,7 @@ import 'package:sks/models/child.dart';
 abstract class IChildService {
   Future<List<Child>> getChildrenByParentId(String parentId);
   Future<Child?> getChildById(String childId);
+  Future<Child?> getChildByQrCode(String qrCodeValue);
   Future<bool> addChild(Child child);
   Future<bool> updateChild(Child child);
   Future<bool> deleteChild(String childId);
@@ -23,6 +24,16 @@ class MockChildService implements IChildService {
     await Future.delayed(const Duration(milliseconds: 200));
     try {
       return _children.firstWhere((c) => c.id == childId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  Future<Child?> getChildByQrCode(String qrCodeValue) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      return _children.firstWhere((c) => c.qrCodeValue == qrCodeValue);
     } catch (e) {
       return null;
     }

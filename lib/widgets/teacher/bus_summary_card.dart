@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/models/bus.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/status_badge.dart';
 
 class BusSummaryCard extends StatelessWidget {
@@ -19,8 +20,11 @@ class BusSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return AppSurfaceCard(
+      inner: true,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.zero,
+      borderRadius: BorderRadius.circular(24),
       child: ListTile(
         onTap: onTap,
         leading: Container(

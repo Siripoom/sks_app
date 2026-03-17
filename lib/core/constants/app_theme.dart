@@ -54,14 +54,16 @@ ThemeData buildAppTheme() {
       ),
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.background,
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
+      surfaceTintColor: Colors.transparent,
+      toolbarHeight: 64,
       titleTextStyle: GoogleFonts.prompt(
         color: AppColors.textPrimary,
-        fontSize: 20,
+        fontSize: 19,
         fontWeight: FontWeight.w600,
       ),
     ),
@@ -71,7 +73,7 @@ ThemeData buildAppTheme() {
         foregroundColor: AppColors.textOnPrimary,
         elevation: 0,
         shadowColor: AppColors.primary.withValues(alpha: 0.3),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 28),
         textStyle: GoogleFonts.prompt(
           fontSize: 15,
@@ -82,8 +84,12 @@ ThemeData buildAppTheme() {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
-        side: const BorderSide(color: AppColors.primary, width: 1.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white.withValues(alpha: 0.66),
+        side: BorderSide(
+          color: AppColors.primary.withValues(alpha: 0.18),
+          width: 1.2,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         textStyle: GoogleFonts.prompt(
           fontSize: 15,
@@ -92,36 +98,33 @@ ThemeData buildAppTheme() {
       ),
     ),
     cardTheme: CardThemeData(
-      color: AppColors.surfaceCard,
+      color: AppColors.background,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       margin: EdgeInsets.zero,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surfaceCard,
+      fillColor: Colors.white.withValues(alpha: 0.94),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(
-          color: AppColors.divider.withValues(alpha: 0.5),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(22),
+        borderSide: BorderSide(color: const Color(0xFFF2E4DE), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         borderSide: const BorderSide(color: AppColors.statusRed, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         borderSide: const BorderSide(color: AppColors.statusRed, width: 1.5),
       ),
       labelStyle: GoogleFonts.prompt(
@@ -135,9 +138,9 @@ ThemeData buildAppTheme() {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: AppColors.surfaceCard,
+      backgroundColor: AppColors.background,
       elevation: 0,
-      indicatorColor: AppColors.primary.withValues(alpha: 0.1),
+      indicatorColor: AppColors.primary.withValues(alpha: 0.08),
       labelTextStyle: WidgetStateProperty.all(
         GoogleFonts.prompt(fontSize: 11, fontWeight: FontWeight.w500),
       ),
@@ -184,8 +187,8 @@ ThemeData buildAppTheme() {
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.textOnPrimary,
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,

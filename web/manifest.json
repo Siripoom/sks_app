@@ -1,11 +1,11 @@
 {
-    "name": "ShuttleGo",
-    "short_name": "ShuttleGo",
+    "name": "SmartKids Shuttle",
+    "short_name": "SmartKids Shuttle",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#F47B20",
-    "description": "ShuttleGo - Your Ride, Real-Time",
+    "description": "SmartKids Shuttle - Your Ride, Real-Time",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

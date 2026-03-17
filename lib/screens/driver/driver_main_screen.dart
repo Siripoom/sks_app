@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/providers/bus_provider.dart';
 import 'package:sks/providers/driver_provider.dart';
@@ -55,54 +56,70 @@ class _DriverMainScreenState extends State<DriverMainScreen> {
     );
   }
 
-  void _switchToStudentsTab() {
-    _goToTab(1);
-  }
+  void _switchToStudentsTab() => _goToTab(1);
+
+  void _switchToMessagesTab() => _goToTab(2);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        onPageChanged: (index) {
-          if (index != _currentIndex) {
-            setState(() => _currentIndex = index);
-          }
-        },
+      body: Stack(
         children: [
-          KeepAlivePage(
-            child: DriverHomeTab(onSeeAllStudents: _switchToStudentsTab),
+          PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            onPageChanged: (index) {
+              if (index != _currentIndex) {
+                setState(() => _currentIndex = index);
+              }
+            },
+            children: [
+              KeepAlivePage(
+                child: DriverHomeTab(
+                  onSeeAllStudents: _switchToStudentsTab,
+                  onOpenMessages: _switchToMessagesTab,
+                ),
+              ),
+              KeepAlivePage(
+                child: DriverStudentsTab(onOpenMessages: _switchToMessagesTab),
+              ),
+              KeepAlivePage(
+                child: DriverMessagesTab(onOpenMessages: _switchToMessagesTab),
+              ),
+              KeepAlivePage(
+                child: DriverDriversTab(onOpenMessages: _switchToMessagesTab),
+              ),
+            ],
           ),
-          const KeepAlivePage(child: DriverStudentsTab()),
-          const KeepAlivePage(child: DriverMessagesTab()),
-          const KeepAlivePage(child: DriverDriversTab()),
-        ],
-      ),
-      bottomNavigationBar: FloatingBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _goToTab,
-        items: const [
-          FloatingBottomNavItem(
-            icon: HugeIcons.strokeRoundedHome01,
-            selectedIcon: HugeIcons.strokeRoundedHome01,
-            label: AppStrings.tabHome,
-          ),
-          FloatingBottomNavItem(
-            icon: HugeIcons.strokeRoundedUserGroup,
-            selectedIcon: HugeIcons.strokeRoundedUserGroup,
-            label: AppStrings.tabStudents,
-          ),
-          FloatingBottomNavItem(
-            icon: HugeIcons.strokeRoundedMessage01,
-            selectedIcon: HugeIcons.strokeRoundedMessage01,
-            label: AppStrings.tabMessages,
-          ),
-          FloatingBottomNavItem(
-            icon: HugeIcons.strokeRoundedUser02,
-            selectedIcon: HugeIcons.strokeRoundedUser02,
-            label: AppStrings.tabDrivers,
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: FloatingBottomNav(
+              currentIndex: _currentIndex,
+              onTap: _goToTab,
+              items: [
+                FloatingBottomNavItem(
+                  icon: HugeIcons.strokeRoundedHome01,
+                  selectedIcon: HugeIcons.strokeRoundedHome01,
+                  label: context.tr(AppStrings.tabHome),
+                ),
+                FloatingBottomNavItem(
+                  icon: HugeIcons.strokeRoundedUserGroup,
+                  selectedIcon: HugeIcons.strokeRoundedUserGroup,
+                  label: context.tr(AppStrings.tabStudents),
+                ),
+                FloatingBottomNavItem(
+                  icon: HugeIcons.strokeRoundedMessage01,
+                  selectedIcon: HugeIcons.strokeRoundedMessage01,
+                  label: context.tr(AppStrings.tabMessages),
+                ),
+                FloatingBottomNavItem(
+                  icon: HugeIcons.strokeRoundedUser02,
+                  selectedIcon: HugeIcons.strokeRoundedUser02,
+                  label: context.tr(AppStrings.tabDrivers),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -4,16 +4,38 @@ import 'package:sks/models/app_user.dart';
 import 'package:sks/models/parent.dart';
 import 'package:uuid/uuid.dart';
 
+enum AppLanguage { thai, english }
+
 class AppStateProvider extends ChangeNotifier {
   UserRole? _selectedRole;
   AppUser? _currentUser;
+  Locale _locale = const Locale('th');
 
   UserRole? get selectedRole => _selectedRole;
   AppUser? get currentUser => _currentUser;
+  Locale get locale => _locale;
+  AppLanguage get language =>
+      _locale.languageCode == 'en' ? AppLanguage.english : AppLanguage.thai;
 
   void selectRole(UserRole role, AppUser user) {
     _selectedRole = role;
     _currentUser = user;
+    notifyListeners();
+  }
+
+  void setLanguage(AppLanguage language) {
+    _locale = Locale(language == AppLanguage.english ? 'en' : 'th');
+    notifyListeners();
+  }
+
+  void updateCurrentUserProfilePhoto(String path) {
+    if (_currentUser == null) {
+      return;
+    }
+
+    final updated = _currentUser!.copyWith(profilePhotoPath: path);
+    _currentUser = updated;
+    MockData.updateAppUser(updated);
     notifyListeners();
   }
 
@@ -59,6 +81,7 @@ class AppStateProvider extends ChangeNotifier {
       name: fullName,
       role: UserRole.parent,
       referenceId: parentId,
+      profilePhotoPath: '',
     );
     MockData.parentUsers.add(newAppUser);
 

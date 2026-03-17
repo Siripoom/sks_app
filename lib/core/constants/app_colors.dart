@@ -6,10 +6,12 @@ class AppColors {
   static const Color primaryLight = Color(0xFFFFB866);
   static const Color primaryDark = Color(0xFFE67A00);
 
-  // Backgrounds - clean, airy
-  static const Color background = Color(0xFFF7F8FA);
+  // Backgrounds - login derived
+  static const Color background = Color(0xFFFCF1ED);
   static const Color surfaceCard = Color(0xFFFFFFFF);
-  static const Color surfaceDark = Color(0xFFF5F0EB);
+  static const Color surfaceDark = Color(0xFFF7E8E1);
+  static const Color surfaceSoft = Color(0xFFFFFBF8);
+  static const Color surfaceInner = Color(0xFFFFFEFD);
 
   // Text - sharper contrast
   static const Color textPrimary = Color(0xFF111827);

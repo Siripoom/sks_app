@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 
 class NotificationTile extends StatelessWidget {
   final String type;
@@ -49,20 +50,11 @@ class NotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _getColor();
 
-    return Container(
+    return AppSurfaceCard(
+      inner: true,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+      borderRadius: BorderRadius.circular(24),
       child: Row(
         children: [
           Container(

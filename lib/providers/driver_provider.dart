@@ -5,6 +5,32 @@ import 'package:sks/services/bus_service.dart';
 import 'package:sks/services/child_service.dart';
 import 'package:sks/services/notification_service.dart';
 
+enum DriverQrCheckInStatus { success, alreadyCheckedIn, notAssigned, notFound }
+
+class DriverQrCheckInResult {
+  final DriverQrCheckInStatus status;
+  final Child? child;
+
+  const DriverQrCheckInResult(this.status, {this.child});
+}
+
+class DriverBoardingToggleResult {
+  final bool success;
+  final Child? child;
+  final bool isBoarded;
+
+  const DriverBoardingToggleResult({
+    required this.success,
+    required this.child,
+    required this.isBoarded,
+  });
+
+  const DriverBoardingToggleResult.failure()
+    : success = false,
+      child = null,
+      isBoarded = false;
+}
+
 class DriverProvider extends ChangeNotifier {
   final IBusService _busService;
   final IChildService _childService;
@@ -26,7 +52,7 @@ class DriverProvider extends ChangeNotifier {
     _assignedBus = await _busService.getBusByDriverId(driverId);
     if (_assignedBus != null) {
       _assignedChildren = [];
-      for (var childId in _assignedBus!.childIds) {
+      for (final childId in _assignedBus!.childIds) {
         final child = await _childService.getChildById(childId);
         if (child != null) {
           _assignedChildren.add(child);
@@ -36,16 +62,58 @@ class DriverProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> toggleBoarding(String childId) async {
+  Future<DriverBoardingToggleResult> toggleBoarding(String childId) async {
     final index = _assignedChildren.indexWhere((c) => c.id == childId);
-    if (index != -1) {
-      _assignedChildren[index].hasBoarded =
-          !_assignedChildren[index].hasBoarded;
-      await _childService.updateChild(_assignedChildren[index]);
-      notifyListeners();
-      return true;
+    if (index == -1) {
+      return const DriverBoardingToggleResult.failure();
     }
-    return false;
+
+    final child = _assignedChildren[index];
+    child.hasBoarded = !child.hasBoarded;
+    await _childService.updateChild(child);
+    if (child.hasBoarded) {
+      await _notificationService.sendBoardingNotification(
+        child.name,
+      );
+    }
+    notifyListeners();
+    return DriverBoardingToggleResult(
+      success: true,
+      child: child,
+      isBoarded: child.hasBoarded,
+    );
+  }
+
+  Future<DriverQrCheckInResult> checkInByQr(String qrCodeValue) async {
+    final index = _assignedChildren.indexWhere(
+      (child) => child.qrCodeValue == qrCodeValue,
+    );
+
+    if (index != -1) {
+      final child = _assignedChildren[index];
+      if (child.hasBoarded) {
+        return DriverQrCheckInResult(
+          DriverQrCheckInStatus.alreadyCheckedIn,
+          child: child,
+        );
+      }
+
+      child.hasBoarded = true;
+      await _childService.updateChild(child);
+      await _notificationService.sendBoardingNotification(child.name);
+      notifyListeners();
+      return DriverQrCheckInResult(DriverQrCheckInStatus.success, child: child);
+    }
+
+    final child = await _childService.getChildByQrCode(qrCodeValue);
+    if (child != null) {
+      return DriverQrCheckInResult(
+        DriverQrCheckInStatus.notAssigned,
+        child: child,
+      );
+    }
+
+    return const DriverQrCheckInResult(DriverQrCheckInStatus.notFound);
   }
 
   int getChildrenBoarded() {
@@ -53,7 +121,9 @@ class DriverProvider extends ChangeNotifier {
   }
 
   Future<bool> markArrived() async {
-    if (_assignedBus == null) return false;
+    if (_assignedBus == null) {
+      return false;
+    }
 
     final success = await _busService.updateBusStatus(
       _assignedBus!.id,
@@ -62,12 +132,9 @@ class DriverProvider extends ChangeNotifier {
     if (success) {
       _assignedBus!.status = BusStatus.arrived;
 
-      // Mark all children as arrived
-      for (var child in _assignedChildren) {
+      for (final child in _assignedChildren) {
         child.hasArrived = true;
         await _childService.updateChild(child);
-
-        // Send arrival notification
         await _notificationService.sendArrivalNotification(
           child.name,
           _assignedBus!.busNumber,

@@ -6,8 +6,9 @@ abstract class ILocationService {
 }
 
 class MockLocationService implements ILocationService {
-  late Timer _timer;
-  late StreamController<Map<String, LatLng>> _locationController;
+  Timer? _timer;
+  late final StreamController<Map<String, LatLng>> _locationController;
+  bool _started = false;
 
   // Initial locations
   double _bus01Lat = 13.7900;
@@ -16,11 +17,17 @@ class MockLocationService implements ILocationService {
   final double _targetSchoolLng = 100.5018;
 
   MockLocationService() {
-    _locationController = StreamController<Map<String, LatLng>>.broadcast();
-    _startLocationUpdates();
+    _locationController = StreamController<Map<String, LatLng>>.broadcast(
+      onListen: _startLocationUpdates,
+    );
   }
 
   void _startLocationUpdates() {
+    if (_started) {
+      return;
+    }
+
+    _started = true;
     _timer = Timer.periodic(const Duration(seconds: 3), (_) {
       // Move bus_01 toward school gradually
       const double deltaLat = 0.0012;
@@ -48,7 +55,7 @@ class MockLocationService implements ILocationService {
   }
 
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     _locationController.close();
   }
 }

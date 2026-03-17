@@ -4,16 +4,23 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/data/mock_data.dart';
 import 'package:sks/providers/driver_provider.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/section_header.dart';
-import 'package:sks/widgets/common/warm_background.dart';
+import 'package:sks/widgets/common/subsection_title.dart';
 import 'package:sks/widgets/driver/trip_info_card.dart';
 
 class DriverHomeTab extends StatefulWidget {
   final VoidCallback onSeeAllStudents;
+  final VoidCallback onOpenMessages;
 
-  const DriverHomeTab({super.key, required this.onSeeAllStudents});
+  const DriverHomeTab({
+    super.key,
+    required this.onSeeAllStudents,
+    required this.onOpenMessages,
+  });
 
   @override
   State<DriverHomeTab> createState() => _DriverHomeTabState();
@@ -46,22 +53,10 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WarmBackground(
-            title:
-                '${AppStrings.morningTrip} • ${AppStrings.routeNumber} ${routeNumber.replaceFirst('สาย ', '')}',
-            subtitle: AppStrings.goodMorning,
-            trailing: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.1),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(7),
-                child: Image.asset('image/school-bus.png', fit: BoxFit.contain),
-              ),
-            ),
+          SectionHeader(
+            title: context.tr(AppStrings.tabHome),
+            hasUnreadNotifications: MockData.mockMessages.isNotEmpty,
+            onNotificationTap: widget.onOpenMessages,
           ),
           const SizedBox(height: 16),
           Padding(
@@ -72,8 +67,6 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Start/End trip
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(
@@ -91,7 +84,7 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                         ),
                       ),
                       label: Text(
-                        AppStrings.inTransit,
+                        context.tr(AppStrings.inTransit),
                         style: GoogleFonts.prompt(fontWeight: FontWeight.w600),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -107,7 +100,7 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                       onPressed: _startTrip,
                       icon: const Icon(HugeIcons.strokeRoundedPlay, size: 22),
                       label: Text(
-                        AppStrings.startTrip,
+                        context.tr(AppStrings.startTrip),
                         style: GoogleFonts.prompt(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -122,72 +115,80 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                     ),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Check-in counter
+          SubsectionTitle(title: context.tr(AppStrings.studentStatus)),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                const Icon(
-                  HugeIcons.strokeRoundedUserGroup,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '$boarded/$total ${AppStrings.checkedIn}',
-                  style: GoogleFonts.prompt(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AppSurfaceCard(
+              inner: true,
+              padding: const EdgeInsets.all(16),
+              borderRadius: BorderRadius.circular(24),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        HugeIcons.strokeRoundedUserGroup,
+                        color: AppColors.primary,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$boarded/$total ${context.tr(AppStrings.checkedIn)}',
+                        style: GoogleFonts.prompt(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  ...children
+                      .take(3)
+                      .map(
+                        (child) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: child.hasBoarded
+                                  ? AppColors.statusGreen.withValues(
+                                      alpha: 0.08,
+                                    )
+                                  : AppColors.statusGrey.withValues(
+                                      alpha: 0.08,
+                                    ),
+                            ),
+                            child: Icon(
+                              child.hasBoarded
+                                  ? HugeIcons.strokeRoundedTick01
+                                  : HugeIcons.strokeRoundedUser02,
+                              size: 16,
+                              color: child.hasBoarded
+                                  ? AppColors.statusGreen
+                                  : AppColors.statusGrey,
+                            ),
+                          ),
+                          title: Text(child.name),
+                          dense: true,
+                        ),
+                      ),
+                  if (children.length > 3)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: widget.onSeeAllStudents,
+                        child: Text(context.tr(AppStrings.seeAll)),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-
-          // Student mini-list
-          ...children
-              .take(3)
-              .map(
-                (child) => ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                  leading: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: child.hasBoarded
-                          ? AppColors.statusGreen.withValues(alpha: 0.08)
-                          : AppColors.statusGrey.withValues(alpha: 0.08),
-                    ),
-                    child: Icon(
-                      child.hasBoarded
-                          ? HugeIcons.strokeRoundedTick01
-                          : HugeIcons.strokeRoundedUser02,
-                      size: 16,
-                      color: child.hasBoarded
-                          ? AppColors.statusGreen
-                          : AppColors.statusGrey,
-                    ),
-                  ),
-                  title: Text(child.name),
-                  dense: true,
-                ),
-              ),
-
-          if (children.length > 3)
-            SectionHeader(
-              title: '',
-              actionText: AppStrings.seeAll,
-              onAction: widget.onSeeAllStudents,
-            ),
-
-          const SizedBox(height: 16),
-
-          if (_tripStarted)
+          if (_tripStarted) ...[
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SizedBox(
@@ -197,7 +198,7 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                   onPressed: _endTrip,
                   icon: const Icon(HugeIcons.strokeRoundedStop, size: 22),
                   label: Text(
-                    AppStrings.endTrip,
+                    context.tr(AppStrings.endTrip),
                     style: GoogleFonts.prompt(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -212,7 +213,7 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                 ),
               ),
             ),
-
+          ],
           const SizedBox(height: 90),
         ],
       ),

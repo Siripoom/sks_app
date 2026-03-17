@@ -1,164 +1,158 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/data/mock_data.dart';
 import 'package:sks/providers/app_state_provider.dart';
+import 'package:sks/screens/common/admin_support_screen.dart';
 import 'package:sks/screens/login/login_screen.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
+import 'package:sks/widgets/common/section_header.dart';
+import 'package:sks/widgets/common/user_avatar.dart';
 
-class DriverDriversTab extends StatelessWidget {
-  const DriverDriversTab({super.key});
+class DriverDriversTab extends StatefulWidget {
+  final VoidCallback onOpenMessages;
+
+  const DriverDriversTab({super.key, required this.onOpenMessages});
+
+  @override
+  State<DriverDriversTab> createState() => _DriverDriversTabState();
+}
+
+class _DriverDriversTabState extends State<DriverDriversTab> {
+  final ImagePicker _imagePicker = ImagePicker();
+
+  Future<void> _pickProfilePhoto() async {
+    final photo = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+      maxWidth: 1600,
+    );
+
+    if (photo == null || !mounted) {
+      return;
+    }
+
+    context.read<AppStateProvider>().updateCurrentUserProfilePhoto(photo.path);
+  }
+
+  void _removeProfilePhoto() {
+    context.read<AppStateProvider>().updateCurrentUserProfilePhoto('');
+  }
 
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppStateProvider>();
     final currentUser = appState.currentUser;
-    final allDrivers = MockData.drivers;
-
-    final currentDriver = allDrivers.firstWhere(
-      (d) => d.id == currentUser?.referenceId,
-      orElse: () => allDrivers.first,
+    final currentDriver = MockData.drivers.firstWhere(
+      (driver) => driver.id == currentUser?.referenceId,
+      orElse: () => MockData.drivers.first,
     );
-    final otherDrivers = allDrivers
-        .where((d) => d.id != currentDriver.id)
-        .toList();
 
     return SingleChildScrollView(
       key: const PageStorageKey('driver-drivers-scroll'),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              AppStrings.driverProfile,
-              style: GoogleFonts.prompt(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
+          SectionHeader(
+            title: context.tr(AppStrings.driverProfile),
+            hasUnreadNotifications: MockData.mockMessages.isNotEmpty,
+            onNotificationTap: widget.onOpenMessages,
           ),
-          const SizedBox(height: 12),
-
-          // Current driver
-          Container(
+          const SizedBox(height: 20),
+          AppSurfaceCard(
+            inner: true,
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceCard,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0A000000),
-                  blurRadius: 20,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
+            borderRadius: BorderRadius.circular(24),
             child: Column(
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                  ),
-                  child: Center(
-                    child: Text(
-                      currentDriver.name.isNotEmpty
-                          ? currentDriver.name[0]
-                          : '?',
-                      style: GoogleFonts.prompt(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 26,
-                      ),
-                    ),
-                  ),
-                ),
+                UserAvatar(user: currentUser, size: 72),
                 const SizedBox(height: 12),
                 Text(
                   currentDriver.name,
-                  style: GoogleFonts.prompt(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 10),
-                _buildInfoRow(HugeIcons.strokeRoundedCall, currentDriver.phone),
+                _buildInfoRow(Icons.call_outlined, currentDriver.phone),
                 const SizedBox(height: 6),
                 _buildInfoRow(
-                  HugeIcons.strokeRoundedIdentityCard,
+                  Icons.badge_outlined,
                   currentDriver.licenseNumber,
                 ),
                 const SizedBox(height: 6),
                 _buildInfoRow(
-                  HugeIcons.strokeRoundedBus01,
-                  '${AppStrings.assignedBus}: ${currentDriver.busId.replaceFirst('bus_', 'สาย ')}',
+                  Icons.directions_bus_outlined,
+                  '${context.tr(AppStrings.assignedBus)}: ${currentDriver.busId.replaceFirst('bus_', 'สาย ')}',
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pickProfilePhoto,
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: Text(context.tr(AppStrings.changeProfilePhoto)),
+                    ),
+                    if ((currentUser?.profilePhotoPath ?? '').isNotEmpty)
+                      TextButton.icon(
+                        onPressed: _removeProfilePhoto,
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(context.tr(AppStrings.removeProfilePhoto)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          AppSurfaceCard(
+            inner: true,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.zero,
+            borderRadius: BorderRadius.circular(24),
+            child: Column(
+              children: [
+                RadioListTile<AppLanguage>(
+                  title: Text(context.tr(AppStrings.languageThai)),
+                  value: AppLanguage.thai,
+                  groupValue: appState.language,
+                  onChanged: (value) {
+                    if (value != null) {
+                      appState.setLanguage(value);
+                    }
+                  },
+                ),
+                RadioListTile<AppLanguage>(
+                  title: Text(context.tr(AppStrings.languageEnglish)),
+                  value: AppLanguage.english,
+                  groupValue: appState.language,
+                  onChanged: (value) {
+                    if (value != null) {
+                      appState.setLanguage(value);
+                    }
+                  },
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  leading: const Icon(Icons.support_agent_outlined),
+                  title: Text(context.tr(AppStrings.contactAdmin)),
+                  subtitle: Text(context.tr(AppStrings.reportIssue)),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminSupportScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              AppStrings.otherDrivers,
-              style: GoogleFonts.prompt(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...otherDrivers.map(
-            (driver) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 20,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                  ),
-                  child: Center(
-                    child: Text(
-                      driver.name.isNotEmpty ? driver.name[0] : '?',
-                      style: GoogleFonts.prompt(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-                title: Text(driver.name),
-                subtitle: Text(driver.busId.replaceFirst('bus_', 'สาย ')),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Logout
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(
@@ -173,12 +167,12 @@ class DriverDriversTab extends StatelessWidget {
                   );
                 },
                 icon: const Icon(
-                  HugeIcons.strokeRoundedLogout01,
+                  Icons.logout,
                   color: AppColors.statusRed,
                 ),
                 label: Text(
-                  AppStrings.logout,
-                  style: GoogleFonts.prompt(
+                  context.tr(AppStrings.logout),
+                  style: const TextStyle(
                     color: AppColors.statusRed,
                     fontWeight: FontWeight.w600,
                   ),
@@ -207,7 +201,7 @@ class DriverDriversTab extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           text,
-          style: GoogleFonts.prompt(
+          style: const TextStyle(
             fontSize: 13,
             color: AppColors.textSecondary,
           ),

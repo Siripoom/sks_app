@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 
 class TripInfoCard extends StatelessWidget {
   final String busNumber;
@@ -15,19 +16,10 @@ class TripInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppSurfaceCard(
+      inner: true,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+      borderRadius: BorderRadius.circular(24),
       child: Row(
         children: [
           Container(
@@ -39,10 +31,7 @@ class TripInfoCard extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(7),
-              child: Image.asset(
-                'image/school-bus.png',
-                fit: BoxFit.contain,
-              ),
+              child: Image.asset('image/school-bus.png', fit: BoxFit.contain),
             ),
           ),
           const SizedBox(width: 14),

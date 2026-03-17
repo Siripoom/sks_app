@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>ShuttleGo</string>
+	<string>SmartKids</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>ShuttleGo</string>
+	<string>SmartKids</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -51,6 +51,10 @@
 	<string>This app needs location to track the school bus.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs location to track the school bus.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app uses the camera to scan student QR codes for boarding.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to let parents choose a child photo.</string>
 	<key>GMSApiKey</key>
 	<string>AIzaSyCLoX0fwViXdhHDjzq2cOoaawtfpAN_hy4</string>
 </dict>

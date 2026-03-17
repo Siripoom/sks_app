@@ -1,8 +1,6 @@
 class AppStrings {
-  // App Title
   static const String appTitle = 'ระบบติดตามรถรับส่ง';
 
-  // Role Selection
   static const String selectRole = 'เลือกบทบาท';
   static const String roleParent = 'ผู้ปกครอง';
   static const String roleTeacher = 'ครู';
@@ -11,7 +9,6 @@ class AppStrings {
   static const String enter = 'เข้าสู่ระบบ';
   static const String selectUserHint = 'กรุณาเลือกผู้ใช้';
 
-  // Parent Screen
   static const String myChildren = 'บุตรหลานของฉัน';
   static const String addChild = 'เพิ่มลูก';
   static const String childName = 'ชื่อลูก';
@@ -24,7 +21,6 @@ class AppStrings {
   static const String busStatus = 'สถานะรถ';
   static const String estimatedArrival = 'เวลาถึงโรงเรียน';
 
-  // Teacher Screen
   static const String teacherHome = 'หน้าหลัก';
   static const String allBuses = 'รถทั้งหมด';
   static const String busCount = 'รถ';
@@ -35,7 +31,6 @@ class AppStrings {
   static const String notYetBoarded = 'ยังไม่ขึ้น';
   static const String parentName = 'ชื่อผู้ปกครอง';
 
-  // Driver Screen
   static const String driverHome = 'บัญชีคนขับ';
   static const String assignedBus = 'รถที่รับผิดชอบ';
   static const String totalChildren = 'เด็กรวม';
@@ -47,12 +42,10 @@ class AppStrings {
   static const String boardedStatus = 'ขึ้นรถแล้ว';
   static const String notBoarded = 'ยังไม่ขึ้น';
 
-  // Bus Status
   static const String busWaiting = 'รอออก';
   static const String busEnRoute = 'กำลังมา';
   static const String busArrived = 'ถึงแล้ว';
 
-  // General
   static const String back = 'ย้อนกลับ';
   static const String close = 'ปิด';
   static const String loading = 'กำลังโหลด...';
@@ -62,24 +55,20 @@ class AppStrings {
   static const String noData = 'ไม่มีข้อมูล';
   static const String emptyList = 'ไม่มีข้อมูล';
 
-  // Map & Location
   static const String currentLocation = 'ตำแหน่งปัจจุบัน';
   static const String school = 'โรงเรียน';
   static const String busLocation = 'ตำแหน่งรถ';
   static const String driverName = 'ชื่อคนขับ';
   static const String busNumber = 'เลขรถ';
 
-  // Notifications
   static const String arrivedAtSchool = 'ลูกไปถึงโรงเรียนแล้ว';
   static const String arrivedWithBus = 'รถหมายเลข {busNumber} ถึงโรงเรียนแล้ว';
   static const String childBoarded = '{childName} ขึ้นรถแล้ว';
   static const String childAlighted = '{childName} ลงรถแล้ว';
 
-  // Logout/Navigation
   static const String logout = 'ออกจากระบบ';
   static const String backToRoleSelection = 'กลับไปเลือกบทบาท';
 
-  // Login Screen
   static const String loginTitle = 'เข้าสู่ระบบ';
   static const String email = 'อีเมล';
   static const String password = 'รหัสผ่าน';
@@ -88,10 +77,9 @@ class AppStrings {
   static const String testAccounts = 'บัญชีทดสอบ';
   static const String smartKidsShuttle = 'SmartKids Shuttle';
 
-  // Parent Tabs
   static const String tabHome = 'หน้าแรก';
   static const String tabSchedule = 'ตารางเวลา';
-  static const String tabMyKids = 'ลูกของฉัน';
+  static const String tabMyKids = 'นักเรียน';
   static const String tabSettings = 'ตั้งค่า';
   static const String welcomeGreeting = 'สวัสดี';
   static const String arrivingIn = 'กำลังจะถึงบ้านใน';
@@ -104,7 +92,6 @@ class AppStrings {
   static const String notificationPreferences = 'ตั้งค่าการแจ้งเตือน';
   static const String language = 'ภาษา';
 
-  // Driver Tabs
   static const String tabStudents = 'นักเรียน';
   static const String tabMessages = 'ข้อความ';
   static const String tabDrivers = 'คนขับ';
@@ -114,7 +101,7 @@ class AppStrings {
   static const String startTrip = 'เริ่มเดินทาง';
   static const String endTrip = 'จบเดินทาง';
   static const String inTransit = 'กำลังเดินทาง...';
-  static const String checkedIn = 'เช็คอินแล้ว';
+  static const String checkedIn = 'เช็กอินแล้ว';
   static const String seeAll = 'ดูทั้งหมด';
   static const String pickUpAction = 'รับ';
   static const String licensePlate = 'ทะเบียนรถ';
@@ -122,7 +109,6 @@ class AppStrings {
   static const String driverProfile = 'ข้อมูลคนขับ';
   static const String otherDrivers = 'คนขับอื่นๆ';
 
-  // Teacher Dashboard
   static const String teacherDashboard = 'แดชบอร์ดครู';
   static const String pickupStatus = 'สถานะการรับ';
   static const String buses = 'คัน';
@@ -130,7 +116,6 @@ class AppStrings {
   static const String minuteShort = 'นาที';
   static const String driverLabel = 'คนขับ:';
 
-  // Registration
   static const String register = 'สมัครสมาชิก';
   static const String createParentAccount = 'สร้างบัญชีผู้ปกครอง';
   static const String firstName = 'ชื่อจริง';
@@ -143,50 +128,80 @@ class AppStrings {
   static const String registerSuccess = 'สมัครสมาชิกสำเร็จ';
   static const String emailAlreadyExists = 'อีเมลนี้ถูกใช้งานแล้ว';
 
-  // Validation
   static const String fieldRequired = 'กรุณากรอกข้อมูล';
   static const String invalidEmail = 'รูปแบบอีเมลไม่ถูกต้อง';
   static const String invalidPhone = 'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก';
   static const String passwordTooShort = 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร';
   static const String passwordsDoNotMatch = 'รหัสผ่านไม่ตรงกัน';
 
-  // Privacy & Terms
   static const String privacyAndTerms = 'นโยบายและเงื่อนไข';
   static const String privacyPolicyTitle = 'นโยบายความเป็นส่วนตัว';
   static const String termsOfServiceTitle = 'เงื่อนไขการใช้บริการ';
   static const String acceptTerms =
       'ฉันยอมรับนโยบายความเป็นส่วนตัวและเงื่อนไขการใช้บริการ';
   static const String acceptAndRegister = 'ยอมรับและสมัครสมาชิก';
-  static const String privacyPolicyContent =
-      'แอปพลิเคชัน SmartKids Shuttle เก็บรวบรวมข้อมูลส่วนบุคคลของท่าน'
-      'เพื่อให้บริการติดตามรถรับส่งนักเรียน โดยมีรายละเอียดดังนี้\n\n'
-      '1. ข้อมูลที่เก็บรวบรวม\n'
-      '• ชื่อ-นามสกุล อีเมล และเบอร์โทรศัพท์ของผู้ปกครอง\n'
-      '• ข้อมูลบุตรหลาน (ชื่อ ที่อยู่ สายรถ)\n'
-      '• ข้อมูลตำแหน่งรถรับส่ง\n\n'
-      '2. วัตถุประสงค์ในการใช้ข้อมูล\n'
-      '• ติดตามตำแหน่งรถรับส่งนักเรียนแบบเรียลไทม์\n'
-      '• แจ้งเตือนสถานะการรับ-ส่งบุตรหลาน\n'
-      '• ติดต่อสื่อสารกับผู้ปกครองในกรณีฉุกเฉิน\n\n'
-      '3. การเปิดเผยข้อมูล\n'
-      '• ข้อมูลจะถูกแชร์กับโรงเรียนและคนขับรถเฉพาะที่จำเป็นต่อการให้บริการ\n'
-      '• เราจะไม่เปิดเผยข้อมูลส่วนบุคคลแก่บุคคลภายนอก\n\n'
-      '4. สิทธิ์ของท่าน\n'
-      '• ท่านสามารถขอดู แก้ไข หรือลบข้อมูลส่วนบุคคลได้ตลอดเวลา\n'
-      '• ท่านสามารถยกเลิกบัญชีได้โดยติดต่อผู้ดูแลระบบ';
-  static const String termsOfServiceContent =
-      'ข้อกำหนดและเงื่อนไขการใช้บริการ SmartKids Shuttle\n\n'
-      '1. การใช้บริการ\n'
-      '• บริการนี้มีไว้สำหรับผู้ปกครองนักเรียนเพื่อติดตามรถรับส่งเท่านั้น\n'
-      '• ผู้ใช้ต้องให้ข้อมูลที่ถูกต้องและเป็นปัจจุบัน\n\n'
-      '2. ความรับผิดชอบของผู้ใช้\n'
-      '• รักษาความลับของรหัสผ่านและบัญชีผู้ใช้\n'
-      '• แจ้งข้อมูลการเปลี่ยนแปลงที่อยู่หรือสายรถให้โรงเรียนทราบ\n'
-      '• ไม่ใช้แอปพลิเคชันในทางที่ผิดกฎหมาย\n\n'
-      '3. ข้อจำกัดความรับผิด\n'
-      '• ข้อมูลตำแหน่งรถเป็นการประมาณและอาจมีความคลาดเคลื่อน\n'
-      '• ระบบอาจมีการหยุดให้บริการชั่วคราวเพื่อบำรุงรักษา\n\n'
-      '4. การยกเลิกบัญชี\n'
-      '• ท่านสามารถยกเลิกบัญชีได้ตลอดเวลา\n'
-      '• โรงเรียนขอสงวนสิทธิ์ในการระงับบัญชีที่ละเมิดเงื่อนไข';
+  static const String privacyPolicyContent = 'นโยบายความเป็นส่วนตัวของ SmartKids Shuttle';
+  static const String termsOfServiceContent = 'เงื่อนไขการใช้บริการ SmartKids Shuttle';
+
+  static const String mapSection = 'แผนที่';
+  static const String todayTrip = 'ทริปวันนี้';
+  static const String studentStatus = 'สถานะนักเรียน';
+  static const String todayPickupHistory = 'ประวัติรับส่งวันนี้';
+  static const String callDriver = 'โทรหาคนขับ';
+  static const String driverPhoneFallback = 'เบอร์คนขับ {phone}';
+  static const String readyTrackToday = 'พร้อมติดตามการเดินทางของบุตรหลานวันนี้';
+  static const String noMapToday = 'ยังไม่มีข้อมูลแผนที่สำหรับวันนี้';
+  static const String noTripToday = 'ยังไม่มีทริปที่จัดไว้สำหรับวันนี้';
+  static const String noStudentData = 'ยังไม่มีข้อมูลนักเรียน';
+  static const String noHistoryToday = 'ยังไม่มีประวัติรับส่งของวันนี้';
+  static const String waitingForRoute = 'รอจัดสายรถ';
+  static const String arrivedAtSchoolStatus = 'ถึงโรงเรียนแล้ว';
+  static const String waitingToBoard = 'รอขึ้นรถ';
+  static const String boardingTime = 'เวลา';
+  static const String noServiceToday = 'ไม่มีรถรับส่งในวันนี้';
+  static const String pickupLocation = 'จุดรับส่ง';
+  static const String pickupLocationHint = 'แตะเพื่อเลือกตำแหน่งจากแผนที่';
+  static const String pendingAssignmentHint =
+      'เด็กใหม่จะถูกเพิ่มในสถานะรอจัดสายรถ และแอดมินจะเป็นผู้กำหนดสายภายหลัง';
+
+  static const String childPhoto = 'รูปลูก';
+  static const String photoHelperEmpty =
+      'เลือกรูปจากแกลเลอรีเพื่อให้แสดงผลในโปรไฟล์ของลูก';
+  static const String photoHelperFilled = 'เลือกรูปแล้ว สามารถเปลี่ยนหรือลบออกได้';
+  static const String selectPhoto = 'เลือกรูป';
+  static const String changePhoto = 'เปลี่ยนรูป';
+  static const String removePhoto = 'ลบรูป';
+  static const String requiredCompleteForm = 'กรุณากรอกข้อมูลให้ครบถ้วน';
+  static const String childAddedSuccess =
+      'เพิ่มลูกสำเร็จ รอแอดมินจัดสายรถจากระบบหลังบ้าน';
+
+  static const String schoolName = 'โรงเรียน';
+  static const String gradeLevel = 'ระดับชั้น';
+  static const String emergencyContactName = 'ชื่อผู้ติดต่อฉุกเฉิน';
+  static const String emergencyContactPhone = 'เบอร์โทรฉุกเฉิน';
+
+  static const String profilePhoto = 'รูปโปรไฟล์';
+  static const String changeProfilePhoto = 'เปลี่ยนรูปโปรไฟล์';
+  static const String removeProfilePhoto = 'ลบรูปโปรไฟล์';
+  static const String languageThai = 'ไทย';
+  static const String languageEnglish = 'English';
+  static const String languageUpdated = 'เปลี่ยนภาษาเรียบร้อย';
+
+  static const String teacherSettings = 'ตั้งค่าครู';
+  static const String contactAdmin = 'ติดต่อแอดมิน';
+  static const String reportIssue = 'แจ้งเหตุถึงแอดมิน';
+  static const String adminSupportTitle = 'ติดต่อหรือแจ้งเหตุถึงแอดมิน';
+  static const String adminSupportSubtitle = 'ส่งข้อความหรือรายงานปัญหาให้ทีมแอดมิน';
+  static const String issueType = 'ประเภทเรื่อง';
+  static const String issueSubject = 'หัวข้อ';
+  static const String issueDetail = 'รายละเอียด';
+  static const String senderContact = 'ข้อมูลผู้ส่ง';
+  static const String submitIssue = 'ส่งถึงแอดมิน';
+  static const String issueSubmitted = 'ส่งข้อความถึงแอดมินเรียบร้อยแล้ว';
+  static const String generalQuestion = 'สอบถามทั่วไป';
+  static const String incidentReport = 'แจ้งเหตุ';
+  static const String technicalProblem = 'ปัญหาการใช้งาน';
+  static const String supportHint = 'อธิบายสิ่งที่ต้องการให้แอดมินช่วยเหลือ';
+  static const String subjectHint = 'กรอกหัวข้อสั้นๆ';
+  static const String selectIssueType = 'เลือกประเภทเรื่อง';
 }

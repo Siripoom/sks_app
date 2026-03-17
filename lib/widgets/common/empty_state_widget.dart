@@ -7,7 +7,11 @@ class EmptyStateWidget extends StatelessWidget {
   final String? message;
   final IconData icon;
 
-  const EmptyStateWidget({super.key, this.message, this.icon = HugeIcons.strokeRoundedInbox});
+  const EmptyStateWidget({
+    super.key,
+    this.message,
+    this.icon = HugeIcons.strokeRoundedInbox,
+  });
 
   @override
   Widget build(BuildContext context) {

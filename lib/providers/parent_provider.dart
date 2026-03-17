@@ -10,17 +10,29 @@ class ParentProvider extends ChangeNotifier {
 
   List<Child> _myChildren = [];
   List<Map<String, String>> _notifications = [];
+  String? _currentParentId;
 
   List<Child> get myChildren => _myChildren;
   List<Map<String, String>> get notifications => _notifications;
 
-  ParentProvider(this._childService, this._notificationService);
+  ParentProvider(this._childService, this._notificationService) {
+    _notificationService.addListener(_syncNotifications);
+  }
 
   Future<void> loadChildren(String parentId) async {
+    _currentParentId = parentId;
     _myChildren = await _childService.getChildrenByParentId(parentId);
+    _syncNotifications();
+  }
+
+  void _syncNotifications() {
+    if (_currentParentId == null) {
+      return;
+    }
+
     _notifications = [
       ...MockData.notificationHistory,
-      ..._notificationService.getNotificationsForParent(parentId),
+      ..._notificationService.getNotificationsForParent(_currentParentId!),
     ];
     notifyListeners();
   }
@@ -57,5 +69,11 @@ class ParentProvider extends ChangeNotifier {
   void addNotification(Map<String, String> notification) {
     _notifications.insert(0, notification);
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _notificationService.removeListener(_syncNotifications);
+    super.dispose();
   }
 }

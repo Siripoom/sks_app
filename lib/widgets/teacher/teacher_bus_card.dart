@@ -6,6 +6,7 @@ import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/data/mock_data.dart';
 import 'package:sks/models/bus.dart';
 import 'package:sks/models/child.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 
 class TeacherBusCard extends StatelessWidget {
   final Bus bus;
@@ -56,20 +57,11 @@ class TeacherBusCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AppSurfaceCard(
+        inner: true,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 20,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

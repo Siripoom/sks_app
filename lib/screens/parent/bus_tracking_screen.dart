@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/providers/bus_provider.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 
 class BusTrackingScreen extends StatefulWidget {
   final String busId;
@@ -27,8 +28,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
   @override
   void initState() {
     super.initState();
-    final busProvider = context.read<BusProvider>();
-    busProvider.loadBusesForSchool('school_01');
+    context.read<BusProvider>().loadBusesForSchool('school_01');
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -39,9 +39,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
   void _updateMarkers() {
     if (_mapController == null) return;
 
-    final busProvider = context.read<BusProvider>();
-    final bus = busProvider.getBusById(widget.busId);
-
+    final bus = context.read<BusProvider>().getBusById(widget.busId);
     _markers.clear();
 
     if (bus != null) {
@@ -66,7 +64,6 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
       );
     }
 
-    // School marker
     _markers.add(
       const Marker(
         markerId: MarkerId('school'),
@@ -78,8 +75,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final busProvider = context.watch<BusProvider>();
-    final bus = busProvider.getBusById(widget.busId);
+    final bus = context.watch<BusProvider>().getBusById(widget.busId);
 
     if (bus != null) {
       _updateMarkers();
@@ -104,19 +100,10 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
               bottom: 16,
               left: 16,
               right: 16,
-              child: Container(
+              child: AppSurfaceCard(
+                inner: true,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceCard,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0x0A000000),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
+                borderRadius: BorderRadius.circular(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

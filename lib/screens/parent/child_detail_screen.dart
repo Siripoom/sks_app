@@ -7,6 +7,9 @@ import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/providers/bus_provider.dart';
 import 'package:sks/screens/parent/bus_tracking_screen.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
+import 'package:sks/widgets/common/child_avatar.dart';
+import 'package:sks/widgets/parent/child_qr_card.dart';
 
 class ChildDetailScreen extends StatefulWidget {
   final Child child;
@@ -21,50 +24,51 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
   @override
   void initState() {
     super.initState();
-    final busProvider = context.read<BusProvider>();
-    busProvider.loadBusesForSchool('school_01');
+    context.read<BusProvider>().loadBusesForSchool('school_01');
   }
 
   String _getStatusText() {
-    if (widget.child.hasArrived) return 'ถึงโรงเรียนแล้ว';
-    if (widget.child.hasBoarded) return 'ขึ้นรถแล้ว';
+    if (!widget.child.isAssigned) {
+      return 'รอจัดสาย';
+    }
+    if (widget.child.hasArrived) {
+      return 'ถึงโรงเรียนแล้ว';
+    }
+    if (widget.child.hasBoarded) {
+      return 'ขึ้นรถแล้ว';
+    }
     return 'รอรถ';
   }
 
   Color _getStatusColor() {
-    if (widget.child.hasArrived) return AppColors.statusGreen;
-    if (widget.child.hasBoarded) return AppColors.statusAmber;
+    if (!widget.child.isAssigned) {
+      return AppColors.textSecondary;
+    }
+    if (widget.child.hasArrived) {
+      return AppColors.statusGreen;
+    }
+    if (widget.child.hasBoarded) {
+      return AppColors.statusAmber;
+    }
     return AppColors.statusRed;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.childDetail)),
+      appBar: AppBar(title: const Text(AppStrings.childDetail)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Child Avatar
             Center(
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                ),
-                child: Center(
-                  child: Text(
-                    widget.child.name.isNotEmpty ? widget.child.name[0] : '?',
-                    style: GoogleFonts.prompt(
-                      color: AppColors.primary,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+              child: ChildAvatar(
+                child: widget.child,
+                size: 100,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                textColor: AppColors.primary,
+                fontSize: 36,
               ),
             ),
             const SizedBox(height: 16),
@@ -78,21 +82,10 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Status Card
-            Container(
+            AppSurfaceCard(
+              inner: true,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 20,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
+              borderRadius: BorderRadius.circular(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -123,83 +116,115 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Divider(color: AppColors.divider),
+                  const Divider(color: AppColors.divider),
                   const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppStrings.busNumber,
-                            style: GoogleFonts.prompt(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.busNumber,
+                              style: GoogleFonts.prompt(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.child.busId.replaceFirst('bus_', 'สาย '),
-                            style: GoogleFonts.prompt(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.child.isAssigned
+                                  ? widget.child.busId!.replaceFirst(
+                                      'bus_',
+                                      'สาย ',
+                                    )
+                                  : 'ยังไม่มีการกำหนดสาย',
+                              style: GoogleFonts.prompt(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppStrings.estimatedArrival,
-                            style: GoogleFonts.prompt(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'จุดรับส่ง',
+                              style: GoogleFonts.prompt(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '08:30 น.',
-                            style: GoogleFonts.prompt(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.child.pickupLabel,
+                              style: GoogleFonts.prompt(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            ChildQrCard(child: widget.child),
             const SizedBox(height: 24),
-
-            // Track Bus Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BusTrackingScreen(
-                        busId: widget.child.busId,
-                        childName: widget.child.name,
+            if (widget.child.isAssigned)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BusTrackingScreen(
+                          busId: widget.child.busId!,
+                          childName: widget.child.name,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(HugeIcons.strokeRoundedMapPin),
+                  label: Text(
+                    AppStrings.trackBus,
+                    style: GoogleFonts.prompt(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              )
+            else
+              AppSurfaceCard(
+                inner: true,
+                padding: const EdgeInsets.all(14),
+                borderRadius: BorderRadius.circular(20),
+                child: const Row(
+                  children: [
+                    Icon(
+                      HugeIcons.strokeRoundedInformationCircle,
+                      color: AppColors.textSecondary,
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'ยังไม่สามารถติดตามรถได้จนกว่าจะมีการกำหนดสายรถ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                  );
-                },
-                icon: const Icon(HugeIcons.strokeRoundedMapPin),
-                label: Text(
-                  AppStrings.trackBus,
-                  style: GoogleFonts.prompt(fontWeight: FontWeight.w600),
+                  ],
                 ),
               ),
-            ),
             const SizedBox(height: 24),
-
-            // Notification History
             Text(
               AppStrings.notificationHistory,
               style: GoogleFonts.prompt(
@@ -208,39 +233,36 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Container(
+            SizedBox(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 20,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ลูกไปถึงโรงเรียนแล้ว เวลา 8:00 น.',
-                    style: GoogleFonts.prompt(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+              child: AppSurfaceCard(
+                inner: true,
+                padding: const EdgeInsets.all(16),
+                borderRadius: BorderRadius.circular(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.child.isAssigned
+                          ? 'ลูกไปถึงโรงเรียนแล้ว เวลา 8:00 น.'
+                          : 'รอการกำหนดสายรถจากแอดมิน',
+                      style: GoogleFonts.prompt(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'รถสาย 1 ขึ้นทางแล้ว',
-                    style: GoogleFonts.prompt(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.child.isAssigned
+                          ? 'รถสาย 1 ออกเดินทางแล้ว'
+                          : 'เมื่อมีการกำหนดสายแล้ว ระบบจะแจ้งเตือนในหน้านี้',
+                      style: GoogleFonts.prompt(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/providers/parent_provider.dart';
+import 'package:sks/widgets/common/warm_background.dart';
 import 'package:sks/widgets/parent/notification_tile.dart';
 
 class ParentNotificationsScreen extends StatelessWidget {
@@ -12,8 +13,7 @@ class ParentNotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final parentProvider = context.watch<ParentProvider>();
-    final notifications = parentProvider.notifications;
+    final notifications = context.watch<ParentProvider>().notifications;
 
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.notificationHistory)),
@@ -38,17 +38,32 @@ class ParentNotificationsScreen extends StatelessWidget {
                 ],
               ),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                final notif = notifications[index];
-                return NotificationTile(
-                  type: notif['type'] ?? '',
-                  message: notif['message'] ?? '',
-                  time: notif['time'] ?? '',
-                );
-              },
+          : Column(
+              children: [
+                const WarmBackground(
+                  title: AppStrings.notificationHistory,
+                  subtitle: AppStrings.smartKidsShuttle,
+                  trailing: Icon(
+                    HugeIcons.strokeRoundedNotification01,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notif = notifications[index];
+                      return NotificationTile(
+                        type: notif['type'] ?? '',
+                        message: notif['message'] ?? '',
+                        time: notif['time'] ?? '',
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
     );
   }

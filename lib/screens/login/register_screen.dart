@@ -5,6 +5,7 @@ import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/data/mock_data.dart';
 import 'package:sks/screens/login/privacy_terms_screen.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -70,106 +71,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.warmGradientEnd,
-              AppColors.warmGradientMid,
-              AppColors.warmGradientStart,
-              AppColors.background,
-            ],
-            stops: [0.0, 0.15, 0.35, 0.65],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-
-                // Header with back button
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x0A000000),
-                              blurRadius: 20,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          HugeIcons.strokeRoundedArrowLeft01,
-                          size: 16,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => Navigator.pop(context),
+                    child: const AppSurfaceCard(
+                      inner: true,
+                      padding: EdgeInsets.all(12),
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                      child: Icon(
+                        HugeIcons.strokeRoundedArrowLeft01,
+                        size: 18,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppStrings.register,
+                        style: GoogleFonts.prompt(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.register,
-                          style: GoogleFonts.prompt(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                      Text(
+                        AppStrings.createParentAccount,
+                        style: GoogleFonts.prompt(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
                         ),
-                        Text(
-                          AppStrings.createParentAccount,
-                          style: GoogleFonts.prompt(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-
-                // Form card
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 20,
-                        offset: Offset(0, 4),
                       ),
                     ],
                   ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              AppSurfaceCard(
+                padding: const EdgeInsets.all(18),
+                borderRadius: BorderRadius.circular(32),
+                child: AppSurfaceCard(
+                  inner: true,
+                  padding: const EdgeInsets.all(20),
+                  borderRadius: BorderRadius.circular(28),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       children: [
-                        // First name
                         TextFormField(
                           controller: _firstNameController,
                           style: GoogleFonts.prompt(fontSize: 14),
                           textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: AppStrings.firstName,
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               HugeIcons.strokeRoundedUser02,
                               size: 20,
                             ),
@@ -182,15 +146,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
-
-                        // Last name
                         TextFormField(
                           controller: _lastNameController,
                           style: GoogleFonts.prompt(fontSize: 14),
                           textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: AppStrings.lastName,
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               HugeIcons.strokeRoundedUser02,
                               size: 20,
                             ),
@@ -203,16 +165,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
-
-                        // Email
                         TextFormField(
                           controller: _emailController,
                           style: GoogleFonts.prompt(fontSize: 14),
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: AppStrings.email,
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               HugeIcons.strokeRoundedMail01,
                               size: 20,
                             ),
@@ -231,16 +191,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
-
-                        // Phone
                         TextFormField(
                           controller: _phoneController,
                           style: GoogleFonts.prompt(fontSize: 14),
                           keyboardType: TextInputType.phone,
                           textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: AppStrings.phoneNumber,
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               HugeIcons.strokeRoundedCall,
                               size: 20,
                             ),
@@ -257,8 +215,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
-
-                        // Password
                         TextFormField(
                           controller: _passwordController,
                           style: GoogleFonts.prompt(fontSize: 14),
@@ -294,8 +250,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
-
-                        // Confirm password
                         TextFormField(
                           controller: _confirmPasswordController,
                           style: GoogleFonts.prompt(fontSize: 14),
@@ -333,8 +287,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
-
-                        // Next button
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -353,40 +305,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // Already have account link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppStrings.alreadyHaveAccount,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    AppStrings.alreadyHaveAccount,
+                    style: GoogleFonts.prompt(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Text(
+                      AppStrings.loginButton,
                       style: GoogleFonts.prompt(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Text(
-                        AppStrings.loginButton,
-                        style: GoogleFonts.prompt(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.accentBlue,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.accentBlue.withValues(
-                            alpha: 0.3,
-                          ),
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentBlue,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.accentBlue.withValues(
+                          alpha: 0.3,
                         ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

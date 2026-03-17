@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/models/bus.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 
 class BusDetailScreen extends StatefulWidget {
   final Bus bus;
@@ -24,19 +25,10 @@ class _BusDetailScreenState extends State<BusDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
+            AppSurfaceCard(
+              inner: true,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 20,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
+              borderRadius: BorderRadius.circular(24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -96,19 +88,11 @@ class _BusDetailScreenState extends State<BusDetailScreen> {
               itemCount: widget.bus.childIds.length,
               itemBuilder: (context, index) {
                 final childId = widget.bus.childIds[index];
-                return Container(
+                return AppSurfaceCard(
+                  inner: true,
                   margin: const EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceCard,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 20,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
+                  padding: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(24),
                   child: ListTile(
                     leading: Container(
                       width: 40,

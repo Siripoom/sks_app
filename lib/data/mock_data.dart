@@ -8,32 +8,30 @@ import 'package:sks/models/school.dart';
 import 'package:sks/models/teacher.dart';
 
 class MockData {
-  // School
   static final School school = School(
     id: 'school_01',
     name: 'โรงเรียนสาธิต',
     lat: 13.7563,
     lng: 100.5018,
-    address: '123 ถนนพระราม 4 เขตบางรัก กรุงเทพมหานคร 10500',
+    address: '123 ถนนพระราม 4 แขวงบางรัก กรุงเทพมหานคร 10500',
   );
 
-  // Drivers
   static final List<Driver> drivers = [
-    Driver(
+    const Driver(
       id: 'driver_01',
       name: 'สมชาย มีสุข',
       phone: '0812345001',
       busId: 'bus_01',
       licenseNumber: '9876543210001',
     ),
-    Driver(
+    const Driver(
       id: 'driver_02',
       name: 'สมหญิง ดีใจ',
       phone: '0812345002',
       busId: 'bus_02',
       licenseNumber: '9876543210002',
     ),
-    Driver(
+    const Driver(
       id: 'driver_03',
       name: 'ประเสริฐ สุขใจ',
       phone: '0812345003',
@@ -42,14 +40,13 @@ class MockData {
     ),
   ];
 
-  // Buses
   static final List<Bus> buses = [
     Bus(
       id: 'bus_01',
       busNumber: 'สาย 1',
       driverId: 'driver_01',
       schoolId: 'school_01',
-      childIds: ['child_01', 'child_02', 'child_04'],
+      childIds: const ['child_01', 'child_02', 'child_04'],
       status: BusStatus.enRoute,
       currentLat: 13.7900,
       currentLng: 100.5500,
@@ -60,7 +57,7 @@ class MockData {
       busNumber: 'สาย 2',
       driverId: 'driver_02',
       schoolId: 'school_01',
-      childIds: ['child_03', 'child_05'],
+      childIds: const ['child_03', 'child_05'],
       status: BusStatus.waiting,
       currentLat: 13.7200,
       currentLng: 100.5800,
@@ -70,34 +67,33 @@ class MockData {
       busNumber: 'สาย 3',
       driverId: 'driver_03',
       schoolId: 'school_01',
-      childIds: ['child_06'],
+      childIds: const ['child_06'],
       status: BusStatus.arrived,
       currentLat: 13.7563,
       currentLng: 100.5018,
     ),
   ];
 
-  // Parents
   static final List<Parent> parents = [
-    Parent(
+    const Parent(
       id: 'parent_01',
       name: 'นางสาวมาลี รักลูก',
       phone: '0812345101',
       childIds: ['child_01', 'child_02'],
     ),
-    Parent(
+    const Parent(
       id: 'parent_02',
       name: 'นายสมศักดิ์ พรดี',
       phone: '0812345102',
       childIds: ['child_03'],
     ),
-    Parent(
+    const Parent(
       id: 'parent_03',
       name: 'นางวันดี ใจดี',
       phone: '0812345103',
       childIds: ['child_04', 'child_05'],
     ),
-    Parent(
+    const Parent(
       id: 'parent_04',
       name: 'นายประยุทธ ใจงาม',
       phone: '0812345104',
@@ -105,79 +101,116 @@ class MockData {
     ),
   ];
 
-  // Children
   static final List<Child> children = [
     Child(
       id: 'child_01',
       name: 'เด็กชายก้อง รักลูก',
       parentId: 'parent_01',
       busId: 'bus_01',
-      homeAddress: '456 ซอยลาดพร้าว 1 เขตวังทองหลาง กรุงเทพฯ',
+      homeAddress: '456 ซอยลาดพร้าว 1 เขตวังทองหลาง กรุงเทพมหานคร',
+      pickupLabel: '456 ซอยลาดพร้าว 1 เขตวังทองหลาง กรุงเทพมหานคร',
+      pickupLat: 13.7900,
+      pickupLng: 100.5500,
+      qrCodeValue: 'SKS-CHILD-01',
+      schoolName: school.name,
+      gradeLevel: 'ป.1',
+      emergencyContactName: 'นางสาวมาลี รักลูก',
+      emergencyContactPhone: '0812345101',
       hasBoarded: true,
-      hasArrived: false,
     ),
     Child(
       id: 'child_02',
       name: 'เด็กหญิงแก้ว รักลูก',
       parentId: 'parent_01',
       busId: 'bus_01',
-      homeAddress: '456 ซอยลาดพร้าว 1 เขตวังทองหลาง กรุงเทพฯ',
-      hasBoarded: false,
-      hasArrived: false,
+      homeAddress: '456 ซอยลาดพร้าว 1 เขตวังทองหลาง กรุงเทพมหานคร',
+      pickupLabel: '456 ซอยลาดพร้าว 1 เขตวังทองหลาง กรุงเทพมหานคร',
+      pickupLat: 13.7901,
+      pickupLng: 100.5499,
+      qrCodeValue: 'SKS-CHILD-02',
+      schoolName: school.name,
+      gradeLevel: 'ป.3',
+      emergencyContactName: 'นางสาวมาลี รักลูก',
+      emergencyContactPhone: '0812345101',
     ),
     Child(
       id: 'child_03',
       name: 'เด็กชายบิ๊ก พรดี',
       parentId: 'parent_02',
       busId: 'bus_02',
-      homeAddress: '789 ถนนรามคำแหง เขตหัวหมาก กรุงเทพฯ',
+      homeAddress: '789 ถนนรามคำแหง เขตหัวหมาก กรุงเทพมหานคร',
+      pickupLabel: '789 ถนนรามคำแหง เขตหัวหมาก กรุงเทพมหานคร',
+      pickupLat: 13.7200,
+      pickupLng: 100.5800,
+      qrCodeValue: 'SKS-CHILD-03',
+      schoolName: school.name,
+      gradeLevel: 'ป.2',
+      emergencyContactName: 'นายสมศักดิ์ พรดี',
+      emergencyContactPhone: '0812345102',
       hasBoarded: true,
-      hasArrived: false,
     ),
     Child(
       id: 'child_04',
       name: 'เด็กหญิงมิ้ว ใจดี',
       parentId: 'parent_03',
       busId: 'bus_01',
-      homeAddress: '321 ซอยสุทธิสาร 1 เขตดิน แดง กรุงเทพฯ',
+      homeAddress: '321 ซอยสุทธิสาร 1 เขตดินแดง กรุงเทพมหานคร',
+      pickupLabel: '321 ซอยสุทธิสาร 1 เขตดินแดง กรุงเทพมหานคร',
+      pickupLat: 13.7700,
+      pickupLng: 100.5300,
+      qrCodeValue: 'SKS-CHILD-04',
+      schoolName: school.name,
+      gradeLevel: 'ป.5',
+      emergencyContactName: 'นางวันดี ใจดี',
+      emergencyContactPhone: '0812345103',
       hasBoarded: true,
-      hasArrived: false,
     ),
     Child(
       id: 'child_05',
       name: 'เด็กชายแมน ใจดี',
       parentId: 'parent_03',
       busId: 'bus_02',
-      homeAddress: '321 ซอยสุทธิสาร 1 เขตดินแดง กรุงเทพฯ',
-      hasBoarded: false,
-      hasArrived: false,
+      homeAddress: '321 ซอยสุทธิสาร 1 เขตดินแดง กรุงเทพมหานคร',
+      pickupLabel: '321 ซอยสุทธิสาร 1 เขตดินแดง กรุงเทพมหานคร',
+      pickupLat: 13.7100,
+      pickupLng: 100.5600,
+      qrCodeValue: 'SKS-CHILD-05',
+      schoolName: school.name,
+      gradeLevel: 'ป.4',
+      emergencyContactName: 'นางวันดี ใจดี',
+      emergencyContactPhone: '0812345103',
     ),
     Child(
       id: 'child_06',
       name: 'เด็กหญิงน้ำ ใจงาม',
       parentId: 'parent_04',
       busId: 'bus_03',
-      homeAddress: '147 ซอยสุทธิสาร 5 เขตดินแดง กรุงเทพฯ',
+      homeAddress: '147 ซอยสุทธิสาร 5 เขตดินแดง กรุงเทพมหานคร',
+      pickupLabel: '147 ซอยสุทธิสาร 5 เขตดินแดง กรุงเทพมหานคร',
+      pickupLat: 13.7563,
+      pickupLng: 100.5018,
+      qrCodeValue: 'SKS-CHILD-06',
+      schoolName: school.name,
+      gradeLevel: 'อนุบาล 3',
+      emergencyContactName: 'นายประยุทธ ใจงาม',
+      emergencyContactPhone: '0812345104',
       hasBoarded: true,
       hasArrived: true,
     ),
   ];
 
-  // Teachers
   static final List<Teacher> teachers = [
-    Teacher(id: 'teacher_01', name: 'ครูสมใจ', schoolId: 'school_01'),
-    Teacher(id: 'teacher_02', name: 'ครูรัตนา', schoolId: 'school_01'),
+    const Teacher(id: 'teacher_01', name: 'ครูสมใจ', schoolId: 'school_01'),
+    const Teacher(id: 'teacher_02', name: 'ครูรัตนา', schoolId: 'school_01'),
   ];
 
-  // Bus Stops
   static final List<BusStop> busStops = [
-    // Bus 1 stops
     BusStop(
       id: 'stop_01',
       name: 'ซอยลาดพร้าว 1',
       lat: 13.7900,
       lng: 100.5500,
-      childIds: ['child_01', 'child_02'],
+      childIds: const ['child_01', 'child_02'],
       isCompleted: true,
     ),
     BusStop(
@@ -185,109 +218,115 @@ class MockData {
       name: 'ซอยสุทธิสาร 1',
       lat: 13.7700,
       lng: 100.5300,
-      childIds: ['child_04'],
-      isCompleted: false,
+      childIds: const ['child_04'],
     ),
-    // Bus 2 stops
     BusStop(
       id: 'stop_03',
       name: 'ถนนรามคำแหง',
       lat: 13.7200,
       lng: 100.5800,
-      childIds: ['child_03'],
-      isCompleted: false,
+      childIds: const ['child_03'],
     ),
     BusStop(
       id: 'stop_04',
       name: 'สุทธิสาร 2',
       lat: 13.7100,
       lng: 100.5600,
-      childIds: ['child_05'],
-      isCompleted: false,
+      childIds: const ['child_05'],
     ),
-    // Bus 3 stops
     BusStop(
       id: 'stop_05',
       name: 'ซอยสุทธิสาร 5',
       lat: 13.7563,
       lng: 100.5018,
-      childIds: ['child_06'],
+      childIds: const ['child_06'],
       isCompleted: true,
     ),
   ];
 
-  // App Users for Role Selection
   static final List<AppUser> parentUsers = [
-    AppUser(
+    const AppUser(
       id: 'appuser_p01',
       name: 'นางสาวมาลี รักลูก',
       role: UserRole.parent,
       referenceId: 'parent_01',
+      profilePhotoPath: '',
     ),
-    AppUser(
+    const AppUser(
       id: 'appuser_p02',
       name: 'นายสมศักดิ์ พรดี',
       role: UserRole.parent,
       referenceId: 'parent_02',
+      profilePhotoPath: '',
     ),
-    AppUser(
+    const AppUser(
       id: 'appuser_p03',
       name: 'นางวันดี ใจดี',
       role: UserRole.parent,
       referenceId: 'parent_03',
+      profilePhotoPath: '',
     ),
-    AppUser(
+    const AppUser(
       id: 'appuser_p04',
       name: 'นายประยุทธ ใจงาม',
       role: UserRole.parent,
       referenceId: 'parent_04',
+      profilePhotoPath: '',
     ),
   ];
 
   static final List<AppUser> teacherUsers = [
-    AppUser(
+    const AppUser(
       id: 'appuser_t01',
       name: 'ครูสมใจ',
       role: UserRole.teacher,
       referenceId: 'teacher_01',
+      profilePhotoPath: '',
     ),
-    AppUser(
+    const AppUser(
       id: 'appuser_t02',
       name: 'ครูรัตนา',
       role: UserRole.teacher,
       referenceId: 'teacher_02',
+      profilePhotoPath: '',
     ),
   ];
 
   static final List<AppUser> driverUsers = [
-    AppUser(
+    const AppUser(
       id: 'appuser_d01',
       name: 'สมชาย มีสุข',
       role: UserRole.driver,
       referenceId: 'driver_01',
+      profilePhotoPath: '',
     ),
-    AppUser(
+    const AppUser(
       id: 'appuser_d02',
       name: 'สมหญิง ดีใจ',
       role: UserRole.driver,
       referenceId: 'driver_02',
+      profilePhotoPath: '',
     ),
-    AppUser(
+    const AppUser(
       id: 'appuser_d03',
       name: 'ประเสริฐ สุขใจ',
       role: UserRole.driver,
       referenceId: 'driver_03',
+      profilePhotoPath: '',
     ),
   ];
 
-  // Notification history
   static final List<Map<String, String>> notificationHistory = [
     {
       'type': 'arrived',
       'message': 'เด็กชายก้อง ถึงโรงเรียนแล้ว (รถสาย 1)',
       'time': '08:00',
     },
-    {'type': 'boarded', 'message': 'เด็กชายก้อง ขึ้นรถแล้ว', 'time': '07:15'},
+    {
+      'type': 'boarded',
+      'message': 'เด็กชายก้อง ขึ้นรถแล้ว',
+      'time': '07:15',
+    },
     {
       'type': 'departed',
       'message': 'รถสาย 1 ออกจากจุดเริ่มต้นแล้ว',
@@ -298,13 +337,21 @@ class MockData {
       'message': 'เด็กหญิงแก้ว ถึงโรงเรียนแล้ว (รถสาย 1)',
       'time': '08:00',
     },
-    {'type': 'boarded', 'message': 'เด็กหญิงแก้ว ขึ้นรถแล้ว', 'time': '07:15'},
+    {
+      'type': 'boarded',
+      'message': 'เด็กหญิงแก้ว ขึ้นรถแล้ว',
+      'time': '07:15',
+    },
     {
       'type': 'system',
       'message': 'พรุ่งนี้รถสาย 1 จะมาเร็วขึ้น 10 นาที',
       'time': '18:00',
     },
-    {'type': 'arrived', 'message': 'เด็กชายก้อง ถึงบ้านแล้ว', 'time': '16:30'},
+    {
+      'type': 'arrived',
+      'message': 'เด็กชายก้อง ถึงบ้านแล้ว',
+      'time': '16:30',
+    },
     {
       'type': 'departed',
       'message': 'รถสาย 1 ออกจากโรงเรียนแล้ว (รอบเย็น)',
@@ -312,7 +359,6 @@ class MockData {
     },
   ];
 
-  // Mock login credentials (all password = 1234)
   static final Map<String, Map<String, dynamic>> mockCredentials = {
     'parent1@sks.com': {
       'password': '1234',
@@ -361,14 +407,12 @@ class MockData {
     },
   };
 
-  // Bus license plates
   static final Map<String, String> busLicensePlates = {
     'bus_01': 'กก 1234',
     'bus_02': 'ขข 5678',
     'bus_03': 'คค 9012',
   };
 
-  // Mock messages for driver
   static final List<Map<String, String>> mockMessages = [
     {
       'sender': 'ระบบ',
@@ -380,28 +424,55 @@ class MockData {
       'message': 'วันนี้ก้องไม่สบาย ไม่ไปโรงเรียนค่ะ',
       'time': '06:45',
     },
-    {'sender': 'ระบบ', 'message': 'เด็กชายบิ๊ก ขึ้นรถแล้ว', 'time': '07:00'},
+    {
+      'sender': 'ระบบ',
+      'message': 'เด็กชายบิ๊ก ขึ้นรถแล้ว',
+      'time': '07:00',
+    },
     {
       'sender': 'นางวันดี',
       'message': 'รบกวนรอหน้าซอยนะคะ มิ้วกำลังมา',
       'time': '07:10',
     },
-    {'sender': 'ระบบ', 'message': 'ถึงโรงเรียนแล้ว', 'time': '07:45'},
+    {
+      'sender': 'ระบบ',
+      'message': 'ถึงโรงเรียนแล้ว',
+      'time': '07:45',
+    },
   ];
 
-  // Mock schedule
   static final List<Map<String, String>> mockSchedule = [
-    {'period': 'รอบเช้า', 'pickup': '07:00', 'dropoff': '08:00'},
-    {'period': 'รอบเย็น', 'pickup': '15:30', 'dropoff': '17:00'},
+    {
+      'period': 'รอบเช้า',
+      'pickup': '07:00',
+      'dropoff': '08:00',
+    },
+    {
+      'period': 'รอบเย็น',
+      'pickup': '15:30',
+      'dropoff': '17:00',
+    },
   ];
 
-  // Helper: find AppUser by ID
   static AppUser? findAppUserById(String appUserId) {
     final allUsers = [...parentUsers, ...teacherUsers, ...driverUsers];
     try {
-      return allUsers.firstWhere((u) => u.id == appUserId);
+      return allUsers.firstWhere((user) => user.id == appUserId);
     } catch (_) {
       return null;
     }
+  }
+
+  static void updateAppUser(AppUser updatedUser) {
+    void updateList(List<AppUser> users) {
+      final index = users.indexWhere((user) => user.id == updatedUser.id);
+      if (index != -1) {
+        users[index] = updatedUser;
+      }
+    }
+
+    updateList(parentUsers);
+    updateList(teacherUsers);
+    updateList(driverUsers);
   }
 }

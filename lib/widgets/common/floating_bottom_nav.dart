@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sks/core/constants/app_colors.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
 
 class FloatingBottomNavItem {
   final IconData icon;
@@ -28,72 +29,74 @@ class FloatingBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      height: 70,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 20,
-            offset: Offset(0, 4),
+    return SafeArea(
+      top: false,
+      child: SizedBox(
+        height: 92,
+        child: AppSurfaceCard(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          borderRadius: BorderRadius.circular(28),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (index) {
+              final item = items[index];
+              final isSelected = index == currentIndex;
+              return Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onTap(index),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isSelected ? 16 : 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.08)
+                                : const Color(0xFFF2E4DE),
+                          ),
+                        ),
+                        child: Icon(
+                          isSelected ? item.selectedIcon : item.icon,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.label,
+                        style: GoogleFonts.prompt(
+                          fontSize: 11,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(items.length, (index) {
-          final item = items[index];
-          final isSelected = index == currentIndex;
-          return Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => onTap(index),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isSelected ? 16 : 0,
-                      vertical: isSelected ? 6 : 0,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Icon(
-                      isSelected ? item.selectedIcon : item.icon,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.label,
-                    style: GoogleFonts.prompt(
-                      fontSize: 11,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
+        ),
       ),
     );
   }

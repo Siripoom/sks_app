@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/app_user.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/screens/driver/driver_main_screen.dart';
@@ -26,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen>
   bool _obscurePassword = true;
 
   AnimationController? _introController;
-  Animation<double>? _badgeAnimation;
   Animation<double>? _heroAnimation;
   Animation<double>? _formAnimation;
   Animation<double>? _footerAnimation;
@@ -53,10 +53,6 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(milliseconds: 900),
     );
     _introController = controller;
-    _badgeAnimation = CurvedAnimation(
-      parent: controller,
-      curve: const Interval(0.0, 0.34, curve: Curves.easeOutCubic),
-    );
     _heroAnimation = CurvedAnimation(
       parent: controller,
       curve: const Interval(0.12, 0.56, curve: Curves.easeOutCubic),
@@ -85,7 +81,10 @@ class _LoginScreenState extends State<LoginScreen>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppStrings.loginFailed, style: GoogleFonts.prompt()),
+          content: Text(
+            context.tr(AppStrings.loginFailed),
+            style: GoogleFonts.prompt(),
+          ),
           backgroundColor: AppColors.statusRed,
         ),
       );
@@ -126,157 +125,99 @@ class _LoginScreenState extends State<LoginScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFFFFF),
-              Color(0xFFFDFDFD),
-              AppColors.background,
-            ],
+            colors: [Color(0xFFFCF1ED), Color(0xFFFCF1ED), Color(0xFFFCF1ED)],
             stops: [0.0, 0.4, 1.0],
           ),
         ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(painter: _PremiumLoginBackgroundPainter()),
-              ),
-            ),
-            Positioned(
-              top: -72,
-              right: -32,
-              child: _buildSoftCircle(
-                size: 220,
-                color: AppColors.primary.withValues(alpha: 0.05),
-              ),
-            ),
-            Positioned(
-              top: 140,
-              left: -42,
-              child: _buildSoftCircle(
-                size: 160,
-                color: AppColors.accentBlue.withValues(alpha: 0.035),
-              ),
-            ),
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 34),
-                   
-                    const SizedBox(height: 22),
-                    _buildEntranceTransition(
-                      animation: _heroAnimation!,
-                      beginOffset: const Offset(0, 0.09),
-                      child: Column(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              children: [
+                const SizedBox(height: 22),
+                _buildEntranceTransition(
+                  animation: _heroAnimation!,
+                  beginOffset: const Offset(0, 0.09),
+                  child: Column(
+                    children: [
+                      ScaleTransition(
+                        scale: Tween<double>(
+                          begin: 0.94,
+                          end: 1,
+                        ).animate(_heroAnimation!),
+                        child: SizedBox(
+                          width: 196,
+                          height: 196,
+                          child: ClipOval(
+                            child: Image.asset(
+                              'image/logo_new.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, -22),
+                        child: _buildBrandLockup(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+                _buildEntranceTransition(
+                  animation: _formAnimation!,
+                  beginOffset: const Offset(0, 0.11),
+                  child: _buildLoginCard(),
+                ),
+                const SizedBox(height: 20),
+                _buildEntranceTransition(
+                  animation: _footerAnimation!,
+                  beginOffset: const Offset(0, 0.1),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          ScaleTransition(
-                            scale: Tween<double>(
-                              begin: 0.94,
-                              end: 1,
-                            ).animate(_heroAnimation!),
-                            child: Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.2,
-                                    ),
-                                    blurRadius: 28,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'image/logo_new.png',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
                           Text(
-                            AppStrings.smartKidsShuttle,
-                            style: GoogleFonts.prompt(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            AppStrings.appTitle,
+                            context.tr(AppStrings.noAccount),
                             style: GoogleFonts.prompt(
                               fontSize: 13,
-                              fontWeight: FontWeight.w400,
                               color: AppColors.textSecondary,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 44),
-                    _buildEntranceTransition(
-                      animation: _formAnimation!,
-                      beginOffset: const Offset(0, 0.11),
-                      child: _buildLoginCard(),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildEntranceTransition(
-                      animation: _footerAnimation!,
-                      beginOffset: const Offset(0, 0.1),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                AppStrings.noAccount,
-                                style: GoogleFonts.prompt(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen(),
                                 ),
+                              );
+                            },
+                            child: Text(
+                              context.tr(AppStrings.register),
+                              style: GoogleFonts.prompt(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.accentBlue,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.accentBlue
+                                    .withValues(alpha: 0.3),
                               ),
-                              const SizedBox(width: 4),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const RegisterScreen(),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  AppStrings.register,
-                                  style: GoogleFonts.prompt(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.accentBlue,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: AppColors.accentBlue
-                                        .withValues(alpha: 0.3),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          _buildTestAccountsPanel(),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 16),
+                      _buildTestAccountsPanel(),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 32),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -284,91 +225,173 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildLoginCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(34),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 20,
-            offset: Offset(0, 4),
+            color: AppColors.primary.withValues(alpha: 0.05),
+            blurRadius: 28,
+            spreadRadius: 2,
+            offset: const Offset(0, 10),
+          ),
+          const BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 40,
+            offset: Offset(0, 20),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.loginButton,
-            style: GoogleFonts.prompt(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            style: GoogleFonts.prompt(fontSize: 14),
-            decoration: InputDecoration(
-              labelText: AppStrings.email,
-              prefixIcon: const Icon(HugeIcons.strokeRoundedMail01, size: 20),
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            style: GoogleFonts.prompt(fontSize: 14),
-            decoration: InputDecoration(
-              labelText: AppStrings.password,
-              prefixIcon: const Icon(
-                HugeIcons.strokeRoundedLockPassword,
-                size: 20,
-              ),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword
-                      ? HugeIcons.strokeRoundedViewOff
-                      : HugeIcons.strokeRoundedView,
-                  size: 20,
-                  color: AppColors.textSecondary,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(34),
+          color: const Color(0xFFFCF1ED),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.98)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCardBrandHeader(),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: const Color(0xFFF2E4DE),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.72),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                    BoxShadow(
+                      color: AppColors.textPrimary.withValues(alpha: 0.035),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-              ),
-            ),
-            onSubmitted: (_) => _login(),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: _login,
-              child: Text(
-                AppStrings.loginButton,
-                style: GoogleFonts.prompt(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: GoogleFonts.prompt(fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: context.tr(AppStrings.email),
+                        prefixIcon: const Icon(
+                          HugeIcons.strokeRoundedMail01,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      style: GoogleFonts.prompt(fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: context.tr(AppStrings.password),
+                        prefixIcon: const Icon(
+                          HugeIcons.strokeRoundedLockPassword,
+                          size: 20,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? HugeIcons.strokeRoundedViewOff
+                                : HugeIcons.strokeRoundedView,
+                            size: 20,
+                            color: AppColors.textSecondary,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
+                      ),
+                      onSubmitted: (_) => _login(),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _login,
+                        child: Text(
+                          context.tr(AppStrings.loginButton),
+                          style: GoogleFonts.prompt(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildSoftCircle({required double size, required Color color}) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+  Widget _buildCardBrandHeader() {
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.asset(
+            'image/bus2.png',
+            width: 150,
+            height: 88,
+            fit: BoxFit.contain,
+          ),
+          Transform.translate(
+            offset: const Offset(-24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (bounds) => const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFF59D3D), Color(0xFFDB6B1A)],
+                  ).createShader(bounds),
+                  child: Text(
+                    'SmartKids',
+                    style: GoogleFonts.nunito(
+                      fontSize: 27,
+                      fontWeight: FontWeight.w900,
+                      height: 0.95,
+                      letterSpacing: -0.8,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'SHUTTLE',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 3.9,
+                    color: const Color(0xFFE18B31),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -390,48 +413,48 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildHeroBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primary.withValues(alpha: 0.12),
-            ),
-            child: const Icon(
-              HugeIcons.strokeRoundedSchoolBus,
-              size: 15,
-              color: AppColors.primary,
+  Widget _buildBrandLockup() {
+    return Column(
+      children: [
+        ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF59D3D), Color(0xFFDB6B1A)],
+          ).createShader(bounds),
+          child: Text(
+            'SmartKids.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.nunito(
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              height: 0.98,
+              letterSpacing: -0.9,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  color: AppColors.primary.withValues(alpha: 0.16),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 10),
-          Text(
-            'Smart route monitoring',
-            style: GoogleFonts.prompt(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
-            ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'SHUTTLE',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 5.2,
+            color: const Color(0xFFE18B31),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+      ],
     );
   }
 
@@ -465,7 +488,7 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      AppStrings.testAccounts,
+                      context.tr(AppStrings.testAccounts),
                       style: GoogleFonts.prompt(
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
@@ -491,23 +514,23 @@ class _LoginScreenState extends State<LoginScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAccountGroup(AppStrings.roleParent, [
+                  _buildAccountGroup(context.tr(AppStrings.roleParent), [
                     'parent1@sks.com',
                     'parent2@sks.com',
                   ]),
                   const SizedBox(height: 10),
-                  _buildAccountGroup(AppStrings.roleTeacher, [
+                  _buildAccountGroup(context.tr(AppStrings.roleTeacher), [
                     'teacher1@sks.com',
                     'teacher2@sks.com',
                   ]),
                   const SizedBox(height: 10),
-                  _buildAccountGroup(AppStrings.roleDriver, [
+                  _buildAccountGroup(context.tr(AppStrings.roleDriver), [
                     'driver1@sks.com',
                     'driver2@sks.com',
                   ]),
                   const SizedBox(height: 8),
                   Text(
-                    'รหัสผ่าน: 1234',
+                    '${context.tr(AppStrings.password)}: 1234',
                     style: GoogleFonts.prompt(
                       fontSize: 11,
                       color: AppColors.textSecondary,
@@ -555,103 +578,4 @@ class _LoginScreenState extends State<LoginScreen>
       ],
     );
   }
-}
-
-class _PremiumLoginBackgroundPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final warmLine = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.09)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6;
-
-    final coolLine = Paint()
-      ..color = AppColors.accentBlue.withValues(alpha: 0.06)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    final topRoute = Path()
-      ..moveTo(size.width * 0.12, size.height * 0.14)
-      ..cubicTo(
-        size.width * 0.3,
-        size.height * 0.07,
-        size.width * 0.5,
-        size.height * 0.2,
-        size.width * 0.68,
-        size.height * 0.12,
-      )
-      ..cubicTo(
-        size.width * 0.84,
-        size.height * 0.05,
-        size.width * 0.98,
-        size.height * 0.16,
-        size.width * 0.86,
-        size.height * 0.28,
-      );
-
-    final lowerRoute = Path()
-      ..moveTo(size.width * 0.06, size.height * 0.76)
-      ..cubicTo(
-        size.width * 0.2,
-        size.height * 0.69,
-        size.width * 0.36,
-        size.height * 0.84,
-        size.width * 0.52,
-        size.height * 0.78,
-      )
-      ..cubicTo(
-        size.width * 0.7,
-        size.height * 0.7,
-        size.width * 0.84,
-        size.height * 0.86,
-        size.width * 0.96,
-        size.height * 0.8,
-      );
-
-    canvas.drawPath(topRoute, warmLine);
-    canvas.drawPath(lowerRoute, coolLine);
-
-    final glowPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.06)
-      ..style = PaintingStyle.fill;
-    final nodePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final nodeStroke = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    final nodes = [
-      Offset(size.width * 0.12, size.height * 0.14),
-      Offset(size.width * 0.68, size.height * 0.12),
-      Offset(size.width * 0.86, size.height * 0.28),
-      Offset(size.width * 0.52, size.height * 0.78),
-      Offset(size.width * 0.96, size.height * 0.8),
-    ];
-
-    for (final node in nodes) {
-      canvas.drawCircle(node, 8, glowPaint);
-      canvas.drawCircle(node, 3.6, nodePaint);
-      canvas.drawCircle(node, 3.6, nodeStroke);
-    }
-
-    final accentRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.68, size.height * 0.19, 80, 30),
-      const Radius.circular(18),
-    );
-    final accentFill = Paint()
-      ..color = Colors.white.withValues(alpha: 0.74)
-      ..style = PaintingStyle.fill;
-    final accentStroke = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    canvas.drawRRect(accentRect, accentFill);
-    canvas.drawRRect(accentRect, accentStroke);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

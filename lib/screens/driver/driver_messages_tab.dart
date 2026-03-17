@@ -3,10 +3,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/data/mock_data.dart';
+import 'package:sks/widgets/common/app_surface_card.dart';
+import 'package:sks/widgets/common/section_header.dart';
 
 class DriverMessagesTab extends StatelessWidget {
-  const DriverMessagesTab({super.key});
+  final VoidCallback onOpenMessages;
+
+  const DriverMessagesTab({super.key, required this.onOpenMessages});
 
   @override
   Widget build(BuildContext context) {
@@ -15,17 +20,12 @@ class DriverMessagesTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-          child: Text(
-            AppStrings.messages,
-            style: GoogleFonts.prompt(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
+        SectionHeader(
+          title: context.tr(AppStrings.tabMessages),
+          hasUnreadNotifications: messages.isNotEmpty,
+          onNotificationTap: onOpenMessages,
         ),
+        const SizedBox(height: 12),
         Expanded(
           child: ListView.separated(
             key: const PageStorageKey('driver-messages-list'),
@@ -35,19 +35,10 @@ class DriverMessagesTab extends StatelessWidget {
             itemBuilder: (context, index) {
               final msg = messages[index];
               final isSystem = msg['sender'] == 'ระบบ';
-              return Container(
+              return AppSurfaceCard(
+                inner: true,
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceCard,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A000000),
-                      blurRadius: 20,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
+                borderRadius: BorderRadius.circular(24),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
