@@ -34,7 +34,7 @@ void main() {
         home: Scaffold(
           body: SectionHeader(
             title: 'หน้าหลัก',
-            hasUnreadNotifications: true,
+            notificationCount: 3,
             onNotificationTap: () => tapped = true,
           ),
         ),
@@ -77,7 +77,7 @@ void main() {
             primaryBus: MockData.buses.first,
             primaryDriver: MockData.drivers.first,
             markers: const <Marker>{},
-            hasUnreadNotifications: true,
+            notificationCount: MockData.notificationHistory.length,
             onNotificationTap: () {},
             onOpenSchedule: () => openedSchedule = true,
             onMapTap: () {},

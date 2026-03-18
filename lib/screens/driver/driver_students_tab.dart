@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
+import 'package:sks/data/mock_data.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/providers/driver_provider.dart';
 import 'package:sks/screens/common/qr_scanner_screen.dart';
@@ -100,7 +101,7 @@ class DriverStudentsTab extends StatelessWidget {
       children: [
         SectionHeader(
           title: context.tr(AppStrings.tabStudents),
-          hasUnreadNotifications: true,
+          notificationCount: MockData.mockMessages.length,
           onNotificationTap: onOpenMessages,
         ),
         const SizedBox(height: 16),

@@ -55,7 +55,7 @@ class _ParentSettingsTabState extends State<ParentSettingsTab> {
         children: [
           SectionHeader(
             title: context.tr(AppStrings.tabSettings),
-            hasUnreadNotifications: parentProvider.notifications.isNotEmpty,
+            notificationCount: parentProvider.notifications.length,
             onNotificationTap: widget.onNotificationTap,
           ),
           const SizedBox(height: 16),

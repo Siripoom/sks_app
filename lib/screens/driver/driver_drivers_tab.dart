@@ -57,7 +57,7 @@ class _DriverDriversTabState extends State<DriverDriversTab> {
         children: [
           SectionHeader(
             title: context.tr(AppStrings.driverProfile),
-            hasUnreadNotifications: MockData.mockMessages.isNotEmpty,
+            notificationCount: MockData.mockMessages.length,
             onNotificationTap: widget.onOpenMessages,
           ),
           const SizedBox(height: 20),

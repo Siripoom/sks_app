@@ -157,7 +157,7 @@ class _ParentMyKidsTab extends StatelessWidget {
             children: [
               SectionHeader(
                 title: context.tr(AppStrings.tabMyKids),
-                hasUnreadNotifications: parentProvider.notifications.isNotEmpty,
+                notificationCount: parentProvider.notifications.length,
                 onNotificationTap: onNotificationTap,
               ),
               const SizedBox(height: 12),

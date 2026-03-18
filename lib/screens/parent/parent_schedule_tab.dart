@@ -67,7 +67,7 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
         children: [
           SectionHeader(
             title: context.tr(AppStrings.tabSchedule),
-            hasUnreadNotifications: parentProvider.notifications.isNotEmpty,
+            notificationCount: parentProvider.notifications.length,
             onNotificationTap: widget.onNotificationTap,
           ),
           const SizedBox(height: 16),

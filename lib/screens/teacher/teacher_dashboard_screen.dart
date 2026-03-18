@@ -44,7 +44,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           children: [
             SectionHeader(
               title: context.tr(AppStrings.teacherDashboard),
-              hasUnreadNotifications: MockData.notificationHistory.isNotEmpty,
+              notificationCount: MockData.notificationHistory.length,
               onNotificationTap: () {
                 Navigator.push(
                   context,

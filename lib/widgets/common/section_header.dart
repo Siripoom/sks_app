@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
 class SectionHeader extends StatelessWidget {
   final String title;
-  final bool hasUnreadNotifications;
+  final int notificationCount;
   final VoidCallback? onNotificationTap;
 
   const SectionHeader({
     super.key,
     required this.title,
-    this.hasUnreadNotifications = false,
+    this.notificationCount = 0,
     this.onNotificationTap,
   });
+
+  String get _badgeLabel {
+    if (notificationCount > 99) {
+      return '99+';
+    }
+    return notificationCount.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,31 +54,53 @@ class SectionHeader extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.22),
+                        color: AppColors.statusAmber.withValues(alpha: 0.55),
+                        width: 1.4,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.statusAmber.withValues(alpha: 0.28),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
                     child: const Icon(
-                      HugeIcons.strokeRoundedNotification01,
-                      color: AppColors.textOnPrimary,
-                      size: 22,
+                      Icons.notifications_rounded,
+                      color: AppColors.statusAmber,
+                      size: 24,
                     ),
                   ),
-                  if (hasUnreadNotifications)
+                  if (notificationCount > 0)
                     Positioned(
-                      top: 6,
-                      right: 6,
+                      top: -4,
+                      right: -6,
                       child: Container(
-                        width: 10,
-                        height: 10,
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: AppColors.statusRed,
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
                             color: AppColors.textOnPrimary,
-                            width: 2,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          _badgeLabel,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.prompt(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textOnPrimary,
+                            height: 1,
                           ),
                         ),
                       ),

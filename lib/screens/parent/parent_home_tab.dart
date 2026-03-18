@@ -55,7 +55,7 @@ class ParentHomeTab extends StatelessWidget {
       primaryBus: primaryBus,
       primaryDriver: primaryDriver,
       markers: _buildMarkers(assignedChildren, busProvider),
-      hasUnreadNotifications: parentProvider.notifications.isNotEmpty,
+      notificationCount: parentProvider.notifications.length,
       onNotificationTap: () {
         Navigator.push(
           context,
@@ -125,7 +125,7 @@ class ParentHomeContent extends StatelessWidget {
   final Bus? primaryBus;
   final Driver? primaryDriver;
   final Set<Marker> markers;
-  final bool hasUnreadNotifications;
+  final int notificationCount;
   final VoidCallback onNotificationTap;
   final VoidCallback onOpenSchedule;
   final VoidCallback? onMapTap;
@@ -139,7 +139,7 @@ class ParentHomeContent extends StatelessWidget {
     required this.primaryBus,
     required this.primaryDriver,
     required this.markers,
-    required this.hasUnreadNotifications,
+    required this.notificationCount,
     required this.onNotificationTap,
     required this.onOpenSchedule,
     this.onMapTap,
@@ -158,7 +158,7 @@ class ParentHomeContent extends StatelessWidget {
         children: [
           SectionHeader(
             title: context.tr(AppStrings.tabHome),
-            hasUnreadNotifications: hasUnreadNotifications,
+            notificationCount: notificationCount,
             onNotificationTap: onNotificationTap,
           ),
           const SizedBox(height: 16),

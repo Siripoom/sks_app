@@ -21,6 +21,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
+  static const String _welcomeSubtitle = 'Safe You Can See, Every Mile';
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showTestAccounts = false;
@@ -146,20 +148,16 @@ class _LoginScreenState extends State<LoginScreen>
                           end: 1,
                         ).animate(_heroAnimation!),
                         child: SizedBox(
-                          width: 196,
-                          height: 196,
-                          child: ClipOval(
-                            child: Image.asset(
-                              'image/logo_new.png',
-                              fit: BoxFit.cover,
-                            ),
+                          width: 248,
+                          height: 176,
+                          child: Image.asset(
+                            'image/logo_sh.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ),
-                      Transform.translate(
-                        offset: const Offset(0, -22),
-                        child: _buildBrandLockup(),
-                      ),
+                      const SizedBox(height: 12),
+                      _buildBrandLockup(),
                     ],
                   ),
                 ),
@@ -343,7 +341,8 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildCardBrandHeader() {
-    return Center(
+    return Align(
+      alignment: Alignment.centerLeft,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -355,40 +354,16 @@ class _LoginScreenState extends State<LoginScreen>
             fit: BoxFit.contain,
           ),
           Transform.translate(
-            offset: const Offset(-24, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (bounds) => const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFF59D3D), Color(0xFFDB6B1A)],
-                  ).createShader(bounds),
-                  child: Text(
-                    'SmartKids',
-                    style: GoogleFonts.nunito(
-                      fontSize: 27,
-                      fontWeight: FontWeight.w900,
-                      height: 0.95,
-                      letterSpacing: -0.8,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'SHUTTLE',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 3.9,
-                    color: const Color(0xFFE18B31),
-                  ),
-                ),
-              ],
+            offset: const Offset(-18, 0),
+            child: Text(
+              'Welcome',
+              style: GoogleFonts.nunito(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                height: 0.95,
+                letterSpacing: -0.8,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -424,7 +399,7 @@ class _LoginScreenState extends State<LoginScreen>
             colors: [Color(0xFFF59D3D), Color(0xFFDB6B1A)],
           ).createShader(bounds),
           child: Text(
-            'SmartKids.',
+            'SmartKids',
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
               fontSize: 36,
@@ -451,6 +426,17 @@ class _LoginScreenState extends State<LoginScreen>
             fontWeight: FontWeight.w800,
             letterSpacing: 5.2,
             color: const Color(0xFFE18B31),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _welcomeSubtitle,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.prompt(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            height: 1.35,
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 10),

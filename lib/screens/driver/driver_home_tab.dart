@@ -55,7 +55,7 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
         children: [
           SectionHeader(
             title: context.tr(AppStrings.tabHome),
-            hasUnreadNotifications: MockData.mockMessages.isNotEmpty,
+            notificationCount: MockData.mockMessages.length,
             onNotificationTap: widget.onOpenMessages,
           ),
           const SizedBox(height: 16),

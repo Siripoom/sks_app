@@ -22,7 +22,7 @@ class DriverMessagesTab extends StatelessWidget {
       children: [
         SectionHeader(
           title: context.tr(AppStrings.tabMessages),
-          hasUnreadNotifications: messages.isNotEmpty,
+          notificationCount: messages.length,
           onNotificationTap: onOpenMessages,
         ),
         const SizedBox(height: 12),
