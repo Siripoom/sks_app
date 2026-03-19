@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:sks/core/constants/app_colors.dart';
+import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
@@ -18,9 +20,9 @@ class ChildQrCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'QR สำหรับเช็กขึ้นรถ',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          Text(
+            context.tr(AppStrings.qrForBoarding),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
           Text(

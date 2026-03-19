@@ -1,0 +1,152 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function appUserDoc() {
+      return get(/databases/$(database)/documents/app_users/$(request.auth.uid));
+    }
+
+    function hasAppUser() {
+      return signedIn() && appUserDoc().data != null;
+    }
+
+    function role() {
+      return hasAppUser() ? appUserDoc().data.role : '';
+    }
+
+    function referenceId() {
+      return hasAppUser() ? appUserDoc().data.referenceId : '';
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function sameArchiveState() {
+      return isAdmin() ||
+        (
+          request.resource.data.isArchived == resource.data.isArchived &&
+          request.resource.data.archivedAt == resource.data.archivedAt
+        );
+    }
+
+    function createWithoutArchive() {
+      return request.resource.data.isArchived == false ||
+        !('isArchived' in request.resource.data);
+    }
+
+    function isParentFor(parentId) {
+      return role() == 'parent' && referenceId() == parentId;
+    }
+
+    function isDriverForBus(busId) {
+      return role() == 'driver' && referenceId() == busIdDriver(busId);
+    }
+
+    function busIdDriver(busId) {
+      return busId is string && busId.size() > 0
+        ? get(/databases/$(database)/documents/buses/$(busId)).data.driverId
+        : '';
+    }
+
+    match /app_users/{uid} {
+      allow read: if signedIn() && (uid == request.auth.uid || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAdmin() || uid == request.auth.uid;
+      allow delete: if isAdmin();
+
+      match /device_tokens/{tokenId} {
+        allow read: if signedIn() && (uid == request.auth.uid || isAdmin());
+        allow write: if signedIn() && uid == request.auth.uid;
+      }
+    }
+
+    match /schools/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /trips/{docId} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() ||
+        (
+          role() == 'driver' &&
+          busIdDriver(resource.data.busId) == referenceId() &&
+          request.resource.data.isArchived == resource.data.isArchived &&
+          request.resource.data.archivedAt == resource.data.archivedAt &&
+          request.resource.data.busId == resource.data.busId
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /parents/{docId} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isParentFor(docId) && sameArchiveState());
+      allow delete: if isAdmin();
+    }
+
+    match /teachers/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /drivers/{docId} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (role() == 'driver' && referenceId() == docId && sameArchiveState());
+      allow delete: if isAdmin();
+    }
+
+    match /admins/{docId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /buses/{docId} {
+      allow read: if signedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() ||
+        (
+          role() == 'driver' &&
+          referenceId() == resource.data.driverId &&
+          request.resource.data.isArchived == resource.data.isArchived &&
+          request.resource.data.archivedAt == resource.data.archivedAt &&
+          request.resource.data.driverId == resource.data.driverId
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /children/{docId} {
+      allow read: if signedIn();
+      allow create: if isAdmin() || (role() == 'parent' && isParentFor(request.resource.data.parentId) && createWithoutArchive());
+      allow update: if isAdmin() ||
+        (
+          role() == 'parent' &&
+          (
+            isParentFor(resource.data.parentId) ||
+            isParentFor(request.resource.data.parentId)
+          ) &&
+          sameArchiveState()
+        ) ||
+        (
+          role() == 'driver' &&
+          (
+            isDriverForBus(resource.data.busId) ||
+            isDriverForBus(request.resource.data.busId)
+          ) &&
+          sameArchiveState()
+        );
+      allow delete: if isAdmin() || (role() == 'parent' && isParentFor(resource.data.parentId));
+    }
+
+    match /notifications/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

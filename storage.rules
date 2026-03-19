@@ -1,0 +1,44 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function appUserDoc() {
+      return firestore.get(/databases/(default)/documents/app_users/$(request.auth.uid));
+    }
+
+    function role() {
+      return signedIn() && appUserDoc().data != null ? appUserDoc().data.role : '';
+    }
+
+    function referenceId() {
+      return signedIn() && appUserDoc().data != null ? appUserDoc().data.referenceId : '';
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function ownsChild(childId) {
+      return role() == 'parent' &&
+        firestore.get(/databases/(default)/documents/children/$(childId)).data.parentId == referenceId();
+    }
+
+    match /profile_photos/{uid}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if isAdmin() || request.auth.uid == uid;
+    }
+
+    match /child_photos/{childId}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if isAdmin() || ownsChild(childId);
+    }
+
+    match /{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

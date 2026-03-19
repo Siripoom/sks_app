@@ -28,10 +28,7 @@ class UserAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: bg,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: bg),
       clipBehavior: Clip.antiAlias,
       child: provider == null
           ? Center(

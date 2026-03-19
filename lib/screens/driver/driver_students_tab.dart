@@ -5,10 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
-import 'package:sks/data/mock_data.dart';
 import 'package:sks/models/child.dart';
+import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/providers/driver_provider.dart';
 import 'package:sks/screens/common/qr_scanner_screen.dart';
+import 'package:sks/services/notification_service.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/section_header.dart';
 import 'package:sks/widgets/driver/student_pickup_tile.dart';
@@ -39,24 +40,34 @@ class DriverStudentsTab extends StatelessWidget {
     switch (result.status) {
       case DriverQrCheckInStatus.success:
         messenger.showSnackBar(
-          SnackBar(content: Text('เช็กอิน ${result.child!.name} สำเร็จ')),
+          SnackBar(
+            content: Text(
+              context.trArgs(AppStrings.checkedInSuccess, {
+                'name': result.child!.name,
+              }),
+            ),
+          ),
         );
         break;
       case DriverQrCheckInStatus.alreadyCheckedIn:
         messenger.showSnackBar(
-          SnackBar(content: Text('${result.child!.name} เช็กอินแล้ว')),
+          SnackBar(
+            content: Text(
+              context.trArgs(AppStrings.alreadyCheckedIn, {
+                'name': result.child!.name,
+              }),
+            ),
+          ),
         );
         break;
       case DriverQrCheckInStatus.notAssigned:
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('QR นี้ไม่ใช่นักเรียนในสายรถที่คุณรับผิดชอบ'),
-          ),
+          SnackBar(content: Text(context.tr(AppStrings.qrNotAssignedMessage))),
         );
         break;
       case DriverQrCheckInStatus.notFound:
         messenger.showSnackBar(
-          const SnackBar(content: Text('ไม่พบข้อมูลนักเรียนจาก QR นี้')),
+          SnackBar(content: Text(context.tr(AppStrings.qrStudentNotFound))),
         );
         break;
     }
@@ -74,7 +85,7 @@ class DriverStudentsTab extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     if (!result.success || result.child == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('ไม่สามารถอัปเดตสถานะขึ้นรถได้')),
+        SnackBar(content: Text(context.tr(AppStrings.unableUpdateBoarding))),
       );
       return;
     }
@@ -83,8 +94,12 @@ class DriverStudentsTab extends StatelessWidget {
       SnackBar(
         content: Text(
           result.isBoarded
-              ? 'ยืนยัน ${result.child!.name} ขึ้นรถแล้ว'
-              : 'ยกเลิกสถานะขึ้นรถของ ${result.child!.name} แล้ว',
+              ? context.trArgs(AppStrings.boardingConfirmed, {
+                  'name': result.child!.name,
+                })
+              : context.trArgs(AppStrings.boardingCanceled, {
+                  'name': result.child!.name,
+                }),
         ),
       ),
     );
@@ -93,82 +108,95 @@ class DriverStudentsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final driverProvider = context.watch<DriverProvider>();
+    final driverId =
+        context.watch<AppStateProvider>().currentUser?.referenceId ?? '';
+    final notificationService = context.read<INotificationService>();
     final children = driverProvider.assignedChildren;
     final boarded = driverProvider.getChildrenBoarded();
     final total = children.length;
 
-    return Column(
-      children: [
-        SectionHeader(
-          title: context.tr(AppStrings.tabStudents),
-          notificationCount: MockData.mockMessages.length,
-          onNotificationTap: onOpenMessages,
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              AppSurfaceCard(
-                inner: true,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                color: AppColors.surfaceSoft,
-                borderRadius: BorderRadius.circular(22),
-                child: Row(
-                  children: [
-                    const Icon(
-                      HugeIcons.strokeRoundedUserGroup,
-                      color: AppColors.primary,
-                      size: 18,
+    return StreamBuilder<List<Map<String, String>>>(
+      stream: notificationService.watchMessagesForDriver(driverId),
+      builder: (context, snapshot) {
+        final messages = snapshot.data ?? const [];
+
+        return Column(
+          children: [
+            SectionHeader(
+              title: context.tr(AppStrings.tabStudents),
+              notificationCount: messages.length,
+              onNotificationTap: onOpenMessages,
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  AppSurfaceCard(
+                    inner: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$boarded/$total ${context.tr(AppStrings.checkedIn)}',
-                      style: GoogleFonts.prompt(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: AppColors.primary,
-                      ),
+                    color: AppColors.surfaceSoft,
+                    borderRadius: BorderRadius.circular(22),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          HugeIcons.strokeRoundedUserGroup,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$boarded/$total ${context.tr(AppStrings.checkedIn)}',
+                          style: GoogleFonts.prompt(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              ElevatedButton.icon(
-                onPressed: () => _scanQr(context),
-                icon: const Icon(HugeIcons.strokeRoundedQrCode),
-                label: const Text('Scan QR'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: children.isEmpty
-              ? Center(
-                  child: Text(
-                    context.tr(AppStrings.emptyList),
-                    style: GoogleFonts.prompt(color: AppColors.textSecondary),
                   ),
-                )
-              : ListView.builder(
-                  key: const PageStorageKey('driver-students-list'),
-                  padding: const EdgeInsets.only(bottom: 90),
-                  itemCount: children.length,
-                  itemBuilder: (context, index) {
-                    final child = children[index];
-                    return StudentPickupTile(
-                      key: ValueKey('${child.id}_${child.hasBoarded}'),
-                      child: child,
-                      onToggleBoarding: () => _toggleBoarding(context, child),
-                    );
-                  },
-                ),
-        ),
-      ],
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    onPressed: () => _scanQr(context),
+                    icon: const Icon(HugeIcons.strokeRoundedQrCode),
+                    label: Text(context.tr(AppStrings.scanQrCode)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: children.isEmpty
+                  ? Center(
+                      child: Text(
+                        context.tr(AppStrings.emptyList),
+                        style: GoogleFonts.prompt(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      key: const PageStorageKey('driver-students-list'),
+                      padding: const EdgeInsets.only(bottom: 90),
+                      itemCount: children.length,
+                      itemBuilder: (context, index) {
+                        final child = children[index];
+                        return StudentPickupTile(
+                          key: ValueKey('${child.id}_${child.hasBoarded}'),
+                          child: child,
+                          onToggleBoarding: () =>
+                              _toggleBoarding(context, child),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

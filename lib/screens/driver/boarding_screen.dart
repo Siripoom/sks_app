@@ -3,6 +3,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/providers/driver_provider.dart';
 import 'package:sks/screens/common/qr_scanner_screen.dart';
@@ -38,24 +39,34 @@ class _BoardingScreenState extends State<BoardingScreen> {
     switch (result.status) {
       case DriverQrCheckInStatus.success:
         messenger.showSnackBar(
-          SnackBar(content: Text('เช็กอิน ${result.child!.name} สำเร็จ')),
+          SnackBar(
+            content: Text(
+              context.trArgs(AppStrings.checkedInSuccess, {
+                'name': result.child!.name,
+              }),
+            ),
+          ),
         );
         break;
       case DriverQrCheckInStatus.alreadyCheckedIn:
         messenger.showSnackBar(
-          SnackBar(content: Text('${result.child!.name} เช็กอินแล้ว')),
+          SnackBar(
+            content: Text(
+              context.trArgs(AppStrings.alreadyCheckedIn, {
+                'name': result.child!.name,
+              }),
+            ),
+          ),
         );
         break;
       case DriverQrCheckInStatus.notAssigned:
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('QR นี้ไม่ใช่นักเรียนในสายรถที่คุณรับผิดชอบ'),
-          ),
+          SnackBar(content: Text(context.tr(AppStrings.qrNotAssignedMessage))),
         );
         break;
       case DriverQrCheckInStatus.notFound:
         messenger.showSnackBar(
-          const SnackBar(content: Text('ไม่พบข้อมูลนักเรียนจาก QR นี้')),
+          SnackBar(content: Text(context.tr(AppStrings.qrStudentNotFound))),
         );
         break;
     }
@@ -73,7 +84,7 @@ class _BoardingScreenState extends State<BoardingScreen> {
     final messenger = ScaffoldMessenger.of(context);
     if (!result.success || result.child == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('ไม่สามารถอัปเดตสถานะขึ้นรถได้')),
+        SnackBar(content: Text(context.tr(AppStrings.unableUpdateBoarding))),
       );
       return;
     }
@@ -82,8 +93,12 @@ class _BoardingScreenState extends State<BoardingScreen> {
       SnackBar(
         content: Text(
           result.isBoarded
-              ? 'ยืนยัน ${result.child!.name} ขึ้นรถแล้ว'
-              : 'ยกเลิกสถานะขึ้นรถของ ${result.child!.name} แล้ว',
+              ? context.trArgs(AppStrings.boardingConfirmed, {
+                  'name': result.child!.name,
+                })
+              : context.trArgs(AppStrings.boardingCanceled, {
+                  'name': result.child!.name,
+                }),
         ),
       ),
     );
@@ -94,7 +109,7 @@ class _BoardingScreenState extends State<BoardingScreen> {
     final driverProvider = context.watch<DriverProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.boardingScreen)),
+      appBar: AppBar(title: Text(context.tr(AppStrings.boardingScreen))),
       body: Column(
         children: [
           Padding(
@@ -109,9 +124,9 @@ class _BoardingScreenState extends State<BoardingScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'ขึ้นรถแล้ว',
-                        style: TextStyle(
+                      Text(
+                        context.tr(AppStrings.checkedInAlready),
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
@@ -134,12 +149,12 @@ class _BoardingScreenState extends State<BoardingScreen> {
                       OutlinedButton.icon(
                         onPressed: _scanQr,
                         icon: const Icon(HugeIcons.strokeRoundedQrCode),
-                        label: const Text('สแกน QR'),
+                        label: Text(context.tr(AppStrings.scanQrCode)),
                       ),
                       ElevatedButton.icon(
                         onPressed: _showArrivalDialog,
                         icon: const Icon(HugeIcons.strokeRoundedTick01),
-                        label: const Text('ถึงโรงเรียน'),
+                        label: Text(context.tr(AppStrings.markArrived)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.statusGreen,
                         ),
@@ -173,16 +188,16 @@ class _BoardingScreenState extends State<BoardingScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('ยืนยันการมาถึง'),
-        content: const Text('รถของคุณถึงโรงเรียนแล้วใช่หรือไม่?'),
+        title: Text(context.tr(AppStrings.confirmArrivalTitle)),
+        content: Text(context.tr(AppStrings.confirmArrivalMessage)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('ยกเลิก'),
+            child: Text(context.tr(AppStrings.cancel)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('ยืนยัน'),
+            child: Text(context.tr(AppStrings.confirmBoarding)),
           ),
         ],
       ),
@@ -198,7 +213,7 @@ class _BoardingScreenState extends State<BoardingScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ทำเครื่องหมายว่าถึงโรงเรียนแล้ว')),
+      SnackBar(content: Text(context.tr(AppStrings.arrivalMarked))),
     );
   }
 }

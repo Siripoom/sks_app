@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
 class ArrivalEtaCard extends StatelessWidget {
@@ -54,7 +55,7 @@ class ArrivalEtaCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${AppStrings.arrivingIn} $minutesAway ${AppStrings.minutes}',
+                    '${context.tr(AppStrings.arrivingIn)} $minutesAway ${context.tr(AppStrings.minutes)}',
                     style: GoogleFonts.prompt(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
@@ -71,7 +72,7 @@ class ArrivalEtaCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '$minutesAway ${AppStrings.minuteShort}',
+                '$minutesAway ${context.tr(AppStrings.minuteShort)}',
                 style: GoogleFonts.prompt(
                   color: AppColors.statusAmber,
                   fontWeight: FontWeight.w600,

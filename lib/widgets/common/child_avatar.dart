@@ -27,10 +27,7 @@ class ChildAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: backgroundColor,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: backgroundColor),
       clipBehavior: Clip.antiAlias,
       child: _hasPhoto ? _buildPhoto() : _buildFallback(),
     );

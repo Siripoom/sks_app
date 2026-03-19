@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
-import 'package:sks/data/mock_data.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/screens/login/privacy_terms_screen.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
@@ -40,19 +40,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
-
-    if (MockData.mockCredentials.containsKey(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppStrings.emailAlreadyExists,
-            style: GoogleFonts.prompt(),
-          ),
-          backgroundColor: AppColors.statusRed,
-        ),
-      );
-      return;
-    }
 
     Navigator.push(
       context,
@@ -97,7 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.register,
+                        context.tr(AppStrings.register),
                         style: GoogleFonts.prompt(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
@@ -105,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       Text(
-                        AppStrings.createParentAccount,
+                        context.tr(AppStrings.createParentAccount),
                         style: GoogleFonts.prompt(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -131,8 +118,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _firstNameController,
                           style: GoogleFonts.prompt(fontSize: 14),
                           textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: AppStrings.firstName,
+                          decoration: InputDecoration(
+                            labelText: context.tr(AppStrings.firstName),
                             prefixIcon: Icon(
                               HugeIcons.strokeRoundedUser02,
                               size: 20,
@@ -140,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return AppStrings.fieldRequired;
+                              return context.tr(AppStrings.fieldRequired);
                             }
                             return null;
                           },
@@ -150,8 +137,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _lastNameController,
                           style: GoogleFonts.prompt(fontSize: 14),
                           textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: AppStrings.lastName,
+                          decoration: InputDecoration(
+                            labelText: context.tr(AppStrings.lastName),
                             prefixIcon: Icon(
                               HugeIcons.strokeRoundedUser02,
                               size: 20,
@@ -159,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return AppStrings.fieldRequired;
+                              return context.tr(AppStrings.fieldRequired);
                             }
                             return null;
                           },
@@ -170,8 +157,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: GoogleFonts.prompt(fontSize: 14),
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: AppStrings.email,
+                          decoration: InputDecoration(
+                            labelText: context.tr(AppStrings.email),
                             prefixIcon: Icon(
                               HugeIcons.strokeRoundedMail01,
                               size: 20,
@@ -179,13 +166,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return AppStrings.fieldRequired;
+                              return context.tr(AppStrings.fieldRequired);
                             }
                             final emailRegex = RegExp(
                               r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$',
                             );
                             if (!emailRegex.hasMatch(value.trim())) {
-                              return AppStrings.invalidEmail;
+                              return context.tr(AppStrings.invalidEmail);
                             }
                             return null;
                           },
@@ -196,8 +183,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: GoogleFonts.prompt(fontSize: 14),
                           keyboardType: TextInputType.phone,
                           textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: AppStrings.phoneNumber,
+                          decoration: InputDecoration(
+                            labelText: context.tr(AppStrings.phoneNumber),
                             prefixIcon: Icon(
                               HugeIcons.strokeRoundedCall,
                               size: 20,
@@ -205,11 +192,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return AppStrings.fieldRequired;
+                              return context.tr(AppStrings.fieldRequired);
                             }
                             final phoneRegex = RegExp(r'^0[689]\d{8}$');
                             if (!phoneRegex.hasMatch(value.trim())) {
-                              return AppStrings.invalidPhone;
+                              return context.tr(AppStrings.invalidPhone);
                             }
                             return null;
                           },
@@ -221,7 +208,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           obscureText: _obscurePassword,
                           textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
-                            labelText: AppStrings.password,
+                            labelText: context.tr(AppStrings.password),
                             prefixIcon: const Icon(
                               HugeIcons.strokeRoundedLockPassword,
                               size: 20,
@@ -241,10 +228,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return AppStrings.fieldRequired;
+                              return context.tr(AppStrings.fieldRequired);
                             }
-                            if (value.length < 4) {
-                              return AppStrings.passwordTooShort;
+                            if (value.length < 6) {
+                              return context.tr(AppStrings.passwordTooShort);
                             }
                             return null;
                           },
@@ -256,7 +243,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           obscureText: _obscureConfirmPassword,
                           textInputAction: TextInputAction.done,
                           decoration: InputDecoration(
-                            labelText: AppStrings.confirmPassword,
+                            labelText: context.tr(AppStrings.confirmPassword),
                             prefixIcon: const Icon(
                               HugeIcons.strokeRoundedLockPassword,
                               size: 20,
@@ -278,10 +265,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onFieldSubmitted: (_) => _handleRegister(),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return AppStrings.fieldRequired;
+                              return context.tr(AppStrings.fieldRequired);
                             }
                             if (value != _passwordController.text) {
-                              return AppStrings.passwordsDoNotMatch;
+                              return context.tr(AppStrings.passwordsDoNotMatch);
                             }
                             return null;
                           },
@@ -293,7 +280,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: ElevatedButton(
                             onPressed: _handleRegister,
                             child: Text(
-                              AppStrings.next,
+                              context.tr(AppStrings.next),
                               style: GoogleFonts.prompt(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -311,7 +298,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    AppStrings.alreadyHaveAccount,
+                    context.tr(AppStrings.alreadyHaveAccount),
                     style: GoogleFonts.prompt(
                       fontSize: 13,
                       color: AppColors.textSecondary,
@@ -321,7 +308,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Text(
-                      AppStrings.loginButton,
+                      context.tr(AppStrings.loginButton),
                       style: GoogleFonts.prompt(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sks/core/constants/app_colors.dart';
+import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
 class WarmBackground extends StatelessWidget {
@@ -44,7 +46,7 @@ class WarmBackground extends StatelessWidget {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'SmartKids Shuttle',
+                        context.tr(AppStrings.smartKidsShuttle),
                         style: GoogleFonts.montserrat(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -55,7 +57,7 @@ class WarmBackground extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      title,
+                      context.tr(title),
                       style: GoogleFonts.prompt(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
@@ -66,7 +68,7 @@ class WarmBackground extends StatelessWidget {
                     if (subtitle != null) ...[
                       const SizedBox(height: 6),
                       Text(
-                        subtitle!,
+                        context.tr(subtitle!),
                         style: GoogleFonts.prompt(
                           fontSize: 13,
                           fontWeight: FontWeight.w400,

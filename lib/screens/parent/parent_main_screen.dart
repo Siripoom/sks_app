@@ -8,6 +8,7 @@ import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/providers/bus_provider.dart';
 import 'package:sks/providers/parent_provider.dart';
+import 'package:sks/providers/trip_provider.dart';
 import 'package:sks/screens/parent/add_child_screen.dart';
 import 'package:sks/screens/parent/child_detail_screen.dart';
 import 'package:sks/screens/parent/parent_home_tab.dart';
@@ -39,8 +40,10 @@ class _ParentMainScreenState extends State<ParentMainScreen> {
     final appState = context.read<AppStateProvider>();
     final parentProvider = context.read<ParentProvider>();
     final busProvider = context.read<BusProvider>();
+    final tripProvider = context.read<TripProvider>();
     parentProvider.loadChildren(appState.currentUser!.referenceId);
-    busProvider.loadBusesForSchool('school_01');
+    busProvider.loadAllBuses();
+    tripProvider.loadAllTrips();
   }
 
   @override

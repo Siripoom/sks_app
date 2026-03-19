@@ -131,7 +131,7 @@ class AppStrings {
   static const String fieldRequired = 'กรุณากรอกข้อมูล';
   static const String invalidEmail = 'รูปแบบอีเมลไม่ถูกต้อง';
   static const String invalidPhone = 'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก';
-  static const String passwordTooShort = 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร';
+  static const String passwordTooShort = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
   static const String passwordsDoNotMatch = 'รหัสผ่านไม่ตรงกัน';
 
   static const String privacyAndTerms = 'นโยบายและเงื่อนไข';
@@ -140,8 +140,10 @@ class AppStrings {
   static const String acceptTerms =
       'ฉันยอมรับนโยบายความเป็นส่วนตัวและเงื่อนไขการใช้บริการ';
   static const String acceptAndRegister = 'ยอมรับและสมัครสมาชิก';
-  static const String privacyPolicyContent = 'นโยบายความเป็นส่วนตัวของ SmartKids Shuttle';
-  static const String termsOfServiceContent = 'เงื่อนไขการใช้บริการ SmartKids Shuttle';
+  static const String privacyPolicyContent =
+      'นโยบายความเป็นส่วนตัวของ SmartKids Shuttle';
+  static const String termsOfServiceContent =
+      'เงื่อนไขการใช้บริการ SmartKids Shuttle';
 
   static const String mapSection = 'แผนที่';
   static const String todayTrip = 'ทริปวันนี้';
@@ -149,7 +151,8 @@ class AppStrings {
   static const String todayPickupHistory = 'ประวัติรับส่งวันนี้';
   static const String callDriver = 'โทรหาคนขับ';
   static const String driverPhoneFallback = 'เบอร์คนขับ {phone}';
-  static const String readyTrackToday = 'พร้อมติดตามการเดินทางของบุตรหลานวันนี้';
+  static const String readyTrackToday =
+      'พร้อมติดตามการเดินทางของบุตรหลานวันนี้';
   static const String noMapToday = 'ยังไม่มีข้อมูลแผนที่สำหรับวันนี้';
   static const String noTripToday = 'ยังไม่มีทริปที่จัดไว้สำหรับวันนี้';
   static const String noStudentData = 'ยังไม่มีข้อมูลนักเรียน';
@@ -167,7 +170,8 @@ class AppStrings {
   static const String childPhoto = 'รูปลูก';
   static const String photoHelperEmpty =
       'เลือกรูปจากแกลเลอรีเพื่อให้แสดงผลในโปรไฟล์ของลูก';
-  static const String photoHelperFilled = 'เลือกรูปแล้ว สามารถเปลี่ยนหรือลบออกได้';
+  static const String photoHelperFilled =
+      'เลือกรูปแล้ว สามารถเปลี่ยนหรือลบออกได้';
   static const String selectPhoto = 'เลือกรูป';
   static const String changePhoto = 'เปลี่ยนรูป';
   static const String removePhoto = 'ลบรูป';
@@ -191,7 +195,8 @@ class AppStrings {
   static const String contactAdmin = 'ติดต่อแอดมิน';
   static const String reportIssue = 'แจ้งเหตุถึงแอดมิน';
   static const String adminSupportTitle = 'ติดต่อหรือแจ้งเหตุถึงแอดมิน';
-  static const String adminSupportSubtitle = 'ส่งข้อความหรือรายงานปัญหาให้ทีมแอดมิน';
+  static const String adminSupportSubtitle =
+      'ส่งข้อความหรือรายงานปัญหาให้ทีมแอดมิน';
   static const String issueType = 'ประเภทเรื่อง';
   static const String issueSubject = 'หัวข้อ';
   static const String issueDetail = 'รายละเอียด';
@@ -204,4 +209,137 @@ class AppStrings {
   static const String supportHint = 'อธิบายสิ่งที่ต้องการให้แอดมินช่วยเหลือ';
   static const String subjectHint = 'กรอกหัวข้อสั้นๆ';
   static const String selectIssueType = 'เลือกประเภทเรื่อง';
+  static const String roleAdmin = 'Admin';
+  static const String welcome = 'Welcome';
+  static const String welcomeSubtitle = 'Safe You Can See, Every Mile';
+  static const String startupFirebaseIncomplete =
+      'Firebase configuration is incomplete.';
+  static const String startupFirebaseDescription =
+      'This codebase is already wired for Firebase Auth, Firestore, Storage, and Messaging. Android and iOS are configured for project sks-app-d980c, but Web still needs generated FlutterFire config if browser support is required.';
+  static const String startupErrorLabel = 'Startup error:';
+  static const String startupUnknownError =
+      'Unknown Firebase initialization error.';
+  static const String startupWebHint =
+      'If this error happened on Web, provide generated FlutterFire config or --dart-define values for the FIREBASE_WEB_* keys used in lib/firebase_options.dart.';
+  static const String selectedLocationLabel = 'Selected location';
+  static const String choosePickupLocation = 'Choose pickup location';
+  static const String mapPickerHint =
+      'Tap the map or drag the marker to choose a pickup point';
+  static const String confirmThisLocation = 'Confirm this location';
+  static const String scanQrCode = 'Scan QR Code';
+  static const String qrScannerHint =
+      'Point the camera at the student QR code to check in';
+  static const String qrNotAssignedMessage =
+      'This QR does not belong to a student on your route';
+  static const String qrStudentNotFound =
+      'No student record was found for this QR';
+  static const String unableUpdateBoarding =
+      'Unable to update boarding status';
+  static const String checkedInSuccess = 'Checked in {name} successfully';
+  static const String alreadyCheckedIn = '{name} is already checked in';
+  static const String boardingConfirmed = 'Confirmed boarding for {name}';
+  static const String boardingCanceled = 'Canceled boarding for {name}';
+  static const String confirmArrivalTitle = 'Confirm arrival';
+  static const String confirmArrivalMessage =
+      'Has your bus arrived at the school already?';
+  static const String arrivalMarked = 'Marked as arrived at school';
+  static const String checkedInAlready = 'Checked in';
+  static const String waitingForQrScan = 'Waiting for QR scan';
+  static const String confirmBoarding = 'Confirm boarding';
+  static const String cancelBoarding = 'Cancel boarding';
+  static const String busLabel = 'Bus';
+  static const String schoolLabel = 'School';
+  static const String gradeLabel = 'Grade';
+  static const String phoneLabel = 'Phone';
+  static const String childrenLabel = 'Children';
+  static const String licenseLabel = 'License';
+  static const String plateLabel = 'Plate';
+  static const String tripLabel = 'Trip';
+  static const String notAssigned = 'Not assigned';
+  static const String cannotTrackBusUntilAssigned =
+      'Bus tracking will be available after a route is assigned';
+  static const String selectedCoordinates = 'Location: {lat}, {lng}';
+  static const String noNotifications = 'No notifications';
+  static const String qrForBoarding = 'QR for boarding check-in';
+  static const String busArrivedAt = 'Arrived at school at {time}';
+  static const String busStartedRoute = 'Bus {bus} has started the route';
+  static const String waitingAdminAssignment =
+      'Waiting for route assignment from admin';
+  static const String assignmentNoticeHint =
+      'This page will update once an admin assigns a route';
+  static const String studentIdLabel = 'Student {id}';
+  static const String passengerCount = '{count} students';
+  static const String adminWorkspace = 'Admin Workspace';
+  static const String dashboard = 'Dashboard';
+  static const String people = 'People';
+  static const String fleet = 'Fleet';
+  static const String assignments = 'Assignments';
+  static const String operationsSnapshot = 'Operations snapshot';
+  static const String activeBusesWithDriver = 'Active buses with driver';
+  static const String archivedRecords = 'Archived records';
+  static const String assignedStudentsLabel = 'Assigned students';
+  static const String managePeopleSubtitle =
+      'Manage parents, teachers, and drivers';
+  static const String manageStudentsSubtitle =
+      'Manage child profiles and parent links';
+  static const String manageFleetSubtitle =
+      'Manage buses and bus-driver links';
+  static const String pendingTripAssignments = 'Pending trip assignments';
+  static const String allActiveStudentsAssigned =
+      'All active students are assigned.';
+  static const String noAssignedStudentsYet = 'No assigned students yet.';
+  static const String add = 'Add';
+  static const String search = 'Search';
+  static const String showArchived = 'Show archived';
+  static const String active = 'Active';
+  static const String archived = 'Archived';
+  static const String edit = 'Edit';
+  static const String assign = 'Assign';
+  static const String reassign = 'Reassign';
+  static const String assignTrip = 'Assign trip';
+  static const String remove = 'Remove';
+  static const String restore = 'Restore';
+  static const String archive = 'Archive';
+  static const String nameLabel = 'Name';
+  static const String parentLabel = 'Parent';
+  static const String latLabel = 'Lat';
+  static const String lngLabel = 'Lng';
+  static const String qrCodeLabel = 'QR code';
+  static const String licenseNumberLabel = 'License number';
+  static const String initialPassword = 'Initial password';
+  static const String newPasswordOptional = 'New password (optional)';
+  static const String unassignedBus = 'Unassigned bus';
+  static const String unassignedDriver = 'Unassigned driver';
+  static const String unassignedLabel = 'Unassigned';
+  static const String unknownParent = 'Unknown parent';
+  static const String createUserTitle = 'Create {entity}';
+  static const String editUserTitle = 'Edit {entity}';
+  static const String createStudentTitle = 'Create student';
+  static const String editStudentTitle = 'Edit student';
+  static const String createBusTitle = 'Create bus';
+  static const String editBusTitle = 'Edit bus';
+  static const String assignStudentTitle = 'Assign {name}';
+  static const String saveChanges = 'Save changes';
+  static const String saveAssignment = 'Save assignment';
+  static const String createdEntitySuccess = 'Created {entity} successfully.';
+  static const String updatedEntitySuccess = 'Updated {entity} successfully.';
+  static const String archivedEntitySuccess =
+      'Archived {entity} successfully.';
+  static const String restoredEntitySuccess =
+      'Restored {entity} successfully.';
+  static const String removeFromTripSuccess = '{name} removed from trip.';
+  static const String tripAssignmentUpdated = 'Trip assignment updated.';
+  static const String unableSaveUser = 'Unable to save user.';
+  static const String unableSaveStudent = 'Unable to save student profile.';
+  static const String unableSaveBus = 'Unable to save bus.';
+  static const String unableAssignChildToTrip =
+      'Unable to assign child to trip.';
+  static const String unableRemoveChildFromTrip =
+      'Unable to remove child from trip.';
+  static const String unableUpdateArchiveState =
+      'Unable to update archive state.';
+  static const String unableUpdateStudentArchiveState =
+      'Unable to update student archive state.';
+  static const String unableUpdateBusArchiveState =
+      'Unable to update bus archive state.';
 }

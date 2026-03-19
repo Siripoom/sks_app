@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sks/models/bus.dart';
 import 'package:sks/models/child.dart';
+import 'package:sks/models/trip.dart';
 import 'package:sks/services/bus_service.dart';
 import 'package:sks/services/child_service.dart';
 import 'package:sks/services/notification_service.dart';
+import 'package:sks/services/trip_service.dart';
 
 enum DriverQrCheckInStatus { success, alreadyCheckedIn, notAssigned, notFound }
 
@@ -32,50 +36,63 @@ class DriverBoardingToggleResult {
 }
 
 class DriverProvider extends ChangeNotifier {
-  final IBusService _busService;
-  final IChildService _childService;
-  final INotificationService _notificationService;
-
-  Bus? _assignedBus;
-  List<Child> _assignedChildren = [];
-
-  Bus? get assignedBus => _assignedBus;
-  List<Child> get assignedChildren => _assignedChildren;
-
   DriverProvider(
     this._busService,
     this._childService,
     this._notificationService,
+    this._tripService,
   );
 
+  final IBusService _busService;
+  final IChildService _childService;
+  final INotificationService _notificationService;
+  final ITripService _tripService;
+
+  Bus? _assignedBus;
+  Trip? _activeTrip;
+  List<Child> _assignedChildren = [];
+  StreamSubscription<List<Child>>? _childrenSubscription;
+
+  Bus? get assignedBus => _assignedBus;
+  Trip? get activeTrip => _activeTrip;
+  List<Child> get assignedChildren => _assignedChildren;
+
   Future<void> loadDriverData(String driverId) async {
-    _assignedBus = await _busService.getBusByDriverId(driverId);
-    if (_assignedBus != null) {
+    _activeTrip = await _tripService.getActiveTripByDriverId(driverId);
+    final busId = _activeTrip?.busId;
+    _assignedBus = busId == null ? await _busService.getBusByDriverId(driverId) : await _busService.getBusById(busId);
+    await _childrenSubscription?.cancel();
+
+    if (_activeTrip == null) {
       _assignedChildren = [];
-      for (final childId in _assignedBus!.childIds) {
-        final child = await _childService.getChildById(childId);
-        if (child != null) {
-          _assignedChildren.add(child);
-        }
-      }
+      notifyListeners();
+      return;
     }
-    notifyListeners();
+
+    _childrenSubscription = _childService
+        .watchChildrenByIds(_activeTrip!.childIds)
+        .listen((children) {
+          _assignedChildren = children;
+          notifyListeners();
+        });
   }
 
   Future<DriverBoardingToggleResult> toggleBoarding(String childId) async {
     final index = _assignedChildren.indexWhere((c) => c.id == childId);
-    if (index == -1) {
+    if (index == -1 || _assignedBus == null) {
       return const DriverBoardingToggleResult.failure();
     }
 
     final child = _assignedChildren[index];
-    child.hasBoarded = !child.hasBoarded;
-    await _childService.updateChild(child);
-    if (child.hasBoarded) {
-      await _notificationService.sendBoardingNotification(
-        child.name,
-      );
-    }
+      child.hasBoarded = !child.hasBoarded;
+      await _childService.updateChild(child);
+      if (child.hasBoarded && _assignedBus != null && _activeTrip != null) {
+        await _notificationService.sendBoardingNotification(
+          child: child,
+          bus: _assignedBus!,
+          trip: _activeTrip!,
+        );
+      }
     notifyListeners();
     return DriverBoardingToggleResult(
       success: true,
@@ -100,7 +117,13 @@ class DriverProvider extends ChangeNotifier {
 
       child.hasBoarded = true;
       await _childService.updateChild(child);
-      await _notificationService.sendBoardingNotification(child.name);
+      if (_assignedBus != null && _activeTrip != null) {
+        await _notificationService.sendBoardingNotification(
+          child: child,
+          bus: _assignedBus!,
+          trip: _activeTrip!,
+        );
+      }
       notifyListeners();
       return DriverQrCheckInResult(DriverQrCheckInStatus.success, child: child);
     }
@@ -121,28 +144,37 @@ class DriverProvider extends ChangeNotifier {
   }
 
   Future<bool> markArrived() async {
-    if (_assignedBus == null) {
+    if (_assignedBus == null || _activeTrip == null) {
       return false;
     }
 
-    final success = await _busService.updateBusStatus(
-      _assignedBus!.id,
-      BusStatus.arrived,
+    final success = await _tripService.updateTripStatus(
+      _activeTrip!.id,
+      TripStatus.completed,
     );
     if (success) {
-      _assignedBus!.status = BusStatus.arrived;
+      await _busService.updateBusStatus(_assignedBus!.id, BusStatus.arrived);
+      _activeTrip = _activeTrip!.copyWith(status: TripStatus.completed);
+      _assignedBus = _assignedBus!.copyWith(status: BusStatus.arrived);
 
       for (final child in _assignedChildren) {
         child.hasArrived = true;
         await _childService.updateChild(child);
         await _notificationService.sendArrivalNotification(
-          child.name,
-          _assignedBus!.busNumber,
+          child: child,
+          bus: _assignedBus!,
+          trip: _activeTrip!,
         );
       }
 
       notifyListeners();
     }
     return success;
+  }
+
+  @override
+  void dispose() {
+    _childrenSubscription?.cancel();
+    super.dispose();
   }
 }

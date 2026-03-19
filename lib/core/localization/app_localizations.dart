@@ -8,10 +8,7 @@ class AppLocalizations {
 
   const AppLocalizations(this.locale);
 
-  static const supportedLocales = <Locale>[
-    Locale('th'),
-    Locale('en'),
-  ];
+  static const supportedLocales = <Locale>[Locale('th'), Locale('en')];
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
@@ -28,11 +25,16 @@ class AppLocalizations {
   bool get isEnglish => locale.languageCode == 'en';
 
   String tr(String key) {
-    if (!isEnglish) {
-      return key;
-    }
+    final languageMap = isEnglish ? _english : _thai;
+    return languageMap[key] ?? key;
+  }
 
-    return _english[key] ?? key;
+  String trArgs(String key, Map<String, String> arguments) {
+    var value = tr(key);
+    arguments.forEach((placeholder, replacement) {
+      value = value.replaceAll('{$placeholder}', replacement);
+    });
+    return value;
   }
 
   static final Map<String, String> _english = {
@@ -153,7 +155,7 @@ class AppLocalizations {
     AppStrings.fieldRequired: 'Please fill in the information',
     AppStrings.invalidEmail: 'Invalid email format',
     AppStrings.invalidPhone: 'Please enter a 10-digit phone number',
-    AppStrings.passwordTooShort: 'Password must be at least 4 characters',
+    AppStrings.passwordTooShort: 'Password must be at least 6 characters',
     AppStrings.passwordsDoNotMatch: 'Passwords do not match',
     AppStrings.privacyAndTerms: 'Privacy and terms',
     AppStrings.privacyPolicyTitle: 'Privacy policy',
@@ -222,6 +224,129 @@ class AppLocalizations {
     AppStrings.subjectHint: 'Enter a short subject',
     AppStrings.selectIssueType: 'Select issue type',
   };
+
+  static final Map<String, String> _thai = {
+    AppStrings.roleAdmin: 'แอดมิน',
+    AppStrings.welcome: 'ยินดีต้อนรับ',
+    AppStrings.welcomeSubtitle: 'ปลอดภัย มองเห็นได้ ทุกระยะทาง',
+    AppStrings.startupFirebaseIncomplete: 'การตั้งค่า Firebase ยังไม่สมบูรณ์',
+    AppStrings.startupFirebaseDescription:
+        'โค้ดชุดนี้เชื่อมต่อ Firebase Auth, Firestore, Storage และ Messaging แล้ว โดย Android และ iOS ถูกตั้งค่าสำหรับโปรเจกต์ sks-app-d980c ส่วน Web ยังต้องใช้ FlutterFire config ที่สร้างจริงหากต้องการรองรับบนเบราว์เซอร์',
+    AppStrings.startupErrorLabel: 'ข้อผิดพลาดตอนเริ่มต้น:',
+    AppStrings.startupUnknownError: 'ไม่ทราบข้อผิดพลาดในการเริ่มต้น Firebase',
+    AppStrings.startupWebHint:
+        'หากปัญหานี้เกิดบน Web ให้ใส่ FlutterFire config ที่สร้างจริง หรือ --dart-define สำหรับค่า FIREBASE_WEB_* ที่ใช้ใน lib/firebase_options.dart',
+    AppStrings.selectedLocationLabel: 'ตำแหน่งที่เลือก',
+    AppStrings.choosePickupLocation: 'เลือกตำแหน่งรับส่ง',
+    AppStrings.mapPickerHint: 'แตะบนแผนที่หรือลากหมุดเพื่อเลือกจุดรับส่ง',
+    AppStrings.confirmThisLocation: 'ยืนยันตำแหน่งนี้',
+    AppStrings.scanQrCode: 'สแกน QR Code',
+    AppStrings.qrScannerHint: 'เล็งกล้องไปที่ QR ของนักเรียนเพื่อเช็กอิน',
+    AppStrings.qrNotAssignedMessage:
+        'QR นี้ไม่ใช่นักเรียนในสายรถที่คุณรับผิดชอบ',
+    AppStrings.qrStudentNotFound: 'ไม่พบข้อมูลนักเรียนจาก QR นี้',
+    AppStrings.unableUpdateBoarding: 'ไม่สามารถอัปเดตสถานะขึ้นรถได้',
+    AppStrings.checkedInSuccess: 'เช็กอิน {name} สำเร็จ',
+    AppStrings.alreadyCheckedIn: '{name} เช็กอินแล้ว',
+    AppStrings.boardingConfirmed: 'ยืนยัน {name} ขึ้นรถแล้ว',
+    AppStrings.boardingCanceled: 'ยกเลิกสถานะขึ้นรถของ {name} แล้ว',
+    AppStrings.confirmArrivalTitle: 'ยืนยันการมาถึง',
+    AppStrings.confirmArrivalMessage: 'รถของคุณถึงโรงเรียนแล้วใช่หรือไม่?',
+    AppStrings.arrivalMarked: 'ทำเครื่องหมายว่าถึงโรงเรียนแล้ว',
+    AppStrings.checkedInAlready: 'เช็กอินแล้ว',
+    AppStrings.waitingForQrScan: 'รอสแกน QR',
+    AppStrings.confirmBoarding: 'ยืนยันขึ้นรถ',
+    AppStrings.cancelBoarding: 'ยกเลิกขึ้นรถ',
+    AppStrings.busLabel: 'รถ',
+    AppStrings.schoolLabel: 'โรงเรียน',
+    AppStrings.gradeLabel: 'ระดับชั้น',
+    AppStrings.phoneLabel: 'โทร',
+    AppStrings.childrenLabel: 'นักเรียน',
+    AppStrings.licenseLabel: 'ใบอนุญาต',
+    AppStrings.plateLabel: 'ทะเบียน',
+    AppStrings.tripLabel: 'ทริป',
+    AppStrings.notAssigned: 'ยังไม่กำหนด',
+    AppStrings.cannotTrackBusUntilAssigned:
+        'จะติดตามรถได้เมื่อมีการกำหนดสายรถแล้ว',
+    AppStrings.selectedCoordinates: 'ตำแหน่ง: {lat}, {lng}',
+    AppStrings.noNotifications: 'ไม่มีการแจ้งเตือน',
+    AppStrings.qrForBoarding: 'QR สำหรับเช็กขึ้นรถ',
+    AppStrings.busArrivedAt: 'ถึงโรงเรียนเวลา {time}',
+    AppStrings.busStartedRoute: 'รถ {bus} ออกเดินทางแล้ว',
+    AppStrings.waitingAdminAssignment: 'รอการกำหนดสายรถจากแอดมิน',
+    AppStrings.assignmentNoticeHint:
+        'เมื่อมีการกำหนดสายรถแล้ว ระบบจะแจ้งในหน้านี้',
+    AppStrings.studentIdLabel: 'นักเรียน {id}',
+    AppStrings.passengerCount: '{count} คน',
+    AppStrings.adminWorkspace: 'พื้นที่จัดการแอดมิน',
+    AppStrings.dashboard: 'ภาพรวม',
+    AppStrings.people: 'ผู้ใช้งาน',
+    AppStrings.fleet: 'ยานพาหนะ',
+    AppStrings.assignments: 'การจัดทริป',
+    AppStrings.operationsSnapshot: 'สรุปการดำเนินงาน',
+    AppStrings.activeBusesWithDriver: 'รถที่มีคนขับประจำ',
+    AppStrings.archivedRecords: 'ข้อมูลที่เก็บถาวร',
+    AppStrings.assignedStudentsLabel: 'นักเรียนที่ถูกจัดทริปแล้ว',
+    AppStrings.managePeopleSubtitle: 'จัดการผู้ปกครอง ครู และคนขับ',
+    AppStrings.manageStudentsSubtitle:
+        'จัดการข้อมูลนักเรียนและผู้ปกครอง',
+    AppStrings.manageFleetSubtitle:
+        'จัดการรถและการผูกคนขับกับรถ',
+    AppStrings.pendingTripAssignments: 'นักเรียนที่รอจัดทริป',
+    AppStrings.allActiveStudentsAssigned:
+        'นักเรียนที่ยังใช้งานอยู่ถูกจัดทริปครบแล้ว',
+    AppStrings.noAssignedStudentsYet: 'ยังไม่มีนักเรียนที่ถูกจัดทริป',
+    AppStrings.add: 'เพิ่ม',
+    AppStrings.search: 'ค้นหา',
+    AppStrings.showArchived: 'แสดงรายการที่เก็บถาวร',
+    AppStrings.active: 'ใช้งานอยู่',
+    AppStrings.archived: 'เก็บถาวร',
+    AppStrings.edit: 'แก้ไข',
+    AppStrings.assign: 'จัดทริป',
+    AppStrings.reassign: 'จัดใหม่',
+    AppStrings.assignTrip: 'กำหนดทริป',
+    AppStrings.remove: 'นำออก',
+    AppStrings.restore: 'กู้คืน',
+    AppStrings.archive: 'เก็บถาวร',
+    AppStrings.nameLabel: 'ชื่อ',
+    AppStrings.parentLabel: 'ผู้ปกครอง',
+    AppStrings.latLabel: 'ละติจูด',
+    AppStrings.lngLabel: 'ลองจิจูด',
+    AppStrings.qrCodeLabel: 'QR code',
+    AppStrings.licenseNumberLabel: 'เลขใบอนุญาต',
+    AppStrings.initialPassword: 'รหัสผ่านเริ่มต้น',
+    AppStrings.newPasswordOptional: 'รหัสผ่านใหม่ (ถ้าแก้ไข)',
+    AppStrings.unassignedBus: 'ยังไม่ผูกรถ',
+    AppStrings.unassignedDriver: 'ยังไม่ผูกคนขับ',
+    AppStrings.unassignedLabel: 'ยังไม่กำหนด',
+    AppStrings.unknownParent: 'ไม่ทราบผู้ปกครอง',
+    AppStrings.createUserTitle: 'สร้าง{entity}',
+    AppStrings.editUserTitle: 'แก้ไข{entity}',
+    AppStrings.createStudentTitle: 'สร้างนักเรียน',
+    AppStrings.editStudentTitle: 'แก้ไขนักเรียน',
+    AppStrings.createBusTitle: 'สร้างรถ',
+    AppStrings.editBusTitle: 'แก้ไขรถ',
+    AppStrings.assignStudentTitle: 'จัดทริปให้ {name}',
+    AppStrings.saveChanges: 'บันทึกการเปลี่ยนแปลง',
+    AppStrings.saveAssignment: 'บันทึกการจัดทริป',
+    AppStrings.createdEntitySuccess: 'สร้าง{entity}สำเร็จ',
+    AppStrings.updatedEntitySuccess: 'อัปเดต{entity}สำเร็จ',
+    AppStrings.archivedEntitySuccess: 'เก็บถาวร{entity}สำเร็จ',
+    AppStrings.restoredEntitySuccess: 'กู้คืน{entity}สำเร็จ',
+    AppStrings.removeFromTripSuccess: 'นำ {name} ออกจากทริปแล้ว',
+    AppStrings.tripAssignmentUpdated: 'อัปเดตการจัดทริปแล้ว',
+    AppStrings.unableSaveUser: 'ไม่สามารถบันทึกข้อมูลผู้ใช้ได้',
+    AppStrings.unableSaveStudent: 'ไม่สามารถบันทึกข้อมูลนักเรียนได้',
+    AppStrings.unableSaveBus: 'ไม่สามารถบันทึกข้อมูลรถได้',
+    AppStrings.unableAssignChildToTrip: 'ไม่สามารถจัดทริปให้นักเรียนได้',
+    AppStrings.unableRemoveChildFromTrip: 'ไม่สามารถนำเด็กออกจากทริปได้',
+    AppStrings.unableUpdateArchiveState:
+        'ไม่สามารถอัปเดตสถานะการเก็บถาวรได้',
+    AppStrings.unableUpdateStudentArchiveState:
+        'ไม่สามารถอัปเดตสถานะเก็บถาวรของนักเรียนได้',
+    AppStrings.unableUpdateBusArchiveState:
+        'ไม่สามารถอัปเดตสถานะเก็บถาวรของรถได้',
+  };
 }
 
 class _AppLocalizationsDelegate
@@ -229,10 +354,9 @@ class _AppLocalizationsDelegate
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) =>
-      AppLocalizations.supportedLocales.any(
-        (supported) => supported.languageCode == locale.languageCode,
-      );
+  bool isSupported(Locale locale) => AppLocalizations.supportedLocales.any(
+    (supported) => supported.languageCode == locale.languageCode,
+  );
 
   @override
   Future<AppLocalizations> load(Locale locale) async {
@@ -247,4 +371,7 @@ extension AppLocalizationX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this);
 
   String tr(String key) => l10n.tr(key);
+
+  String trArgs(String key, Map<String, String> arguments) =>
+      l10n.trArgs(key, arguments);
 }

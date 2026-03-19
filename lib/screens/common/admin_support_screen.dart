@@ -151,6 +151,8 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
         return AppStrings.roleTeacher;
       case UserRole.driver:
         return AppStrings.roleDriver;
+      case UserRole.admin:
+        return 'Admin';
     }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/data/mock_data.dart';
@@ -11,17 +12,24 @@ import 'package:sks/screens/parent/parent_home_tab.dart';
 import 'package:sks/widgets/common/section_header.dart';
 
 void main() {
-  testWidgets('App shows login screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App shows Firebase setup fallback when config is missing', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      MyApp(startupLocale: const Locale('th'), startupError: null),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('SmartKids.'), findsOneWidget);
-    expect(find.text('SHUTTLE'), findsAtLeastNWidgets(1));
     expect(
-      find.widgetWithText(ElevatedButton, AppStrings.loginButton),
+      find.text(AppLocalizations(const Locale('th')).tr(
+        AppStrings.startupFirebaseIncomplete,
+      )),
       findsOneWidget,
     );
-    expect(find.byType(TextField), findsNWidgets(2));
+    expect(find.textContaining('sks-app-d980c'), findsOneWidget);
   });
 
   testWidgets('SectionHeader triggers notification callback', (
@@ -70,10 +78,15 @@ void main() {
               role: UserRole.parent,
               referenceId: 'parent_01',
             ),
+            primarySchool: MockData.school,
             children: MockData.children
                 .where((child) => child.parentId == 'parent_01')
                 .toList(),
             notifications: MockData.notificationHistory,
+            tripsById: const {},
+            schoolsById: {'school_01': MockData.school},
+            busesById: {'bus_01': MockData.buses.first},
+            primaryTrip: null,
             primaryBus: MockData.buses.first,
             primaryDriver: MockData.drivers.first,
             markers: const <Marker>{},

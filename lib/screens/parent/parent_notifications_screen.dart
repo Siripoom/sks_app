@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/providers/parent_provider.dart';
 import 'package:sks/widgets/common/warm_background.dart';
 import 'package:sks/widgets/parent/notification_tile.dart';
@@ -16,7 +17,7 @@ class ParentNotificationsScreen extends StatelessWidget {
     final notifications = context.watch<ParentProvider>().notifications;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.notificationHistory)),
+      appBar: AppBar(title: Text(context.tr(AppStrings.notificationHistory))),
       body: notifications.isEmpty
           ? Center(
               child: Column(
@@ -29,7 +30,7 @@ class ParentNotificationsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'ไม่มีการแจ้งเตือน',
+                    context.tr(AppStrings.noNotifications),
                     style: GoogleFonts.prompt(
                       fontSize: 15,
                       color: AppColors.textSecondary,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
+import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/child_avatar.dart';
@@ -97,15 +99,21 @@ class BoardingChildTile extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
-                  color:
-                      (isBoarded ? AppColors.statusGreen : AppColors.surfaceSoft)
-                          .withValues(alpha: isBoarded ? 0.08 : 1),
+                  color: (isBoarded
+                          ? AppColors.statusGreen
+                          : AppColors.surfaceSoft)
+                      .withValues(alpha: isBoarded ? 0.08 : 1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  isBoarded ? 'เช็กอินแล้ว' : 'ยังไม่ขึ้นรถ',
+                  isBoarded
+                      ? context.tr(AppStrings.checkedInAlready)
+                      : context.tr(AppStrings.notBoarded),
                   style: GoogleFonts.prompt(
                     color: isBoarded
                         ? AppColors.statusGreen
@@ -124,7 +132,11 @@ class BoardingChildTile extends StatelessWidget {
                       : HugeIcons.strokeRoundedCheckmarkCircle02,
                   size: 18,
                 ),
-                label: Text(isBoarded ? 'ยกเลิกขึ้นรถ' : 'ยืนยันขึ้นรถ'),
+                label: Text(
+                  isBoarded
+                      ? context.tr(AppStrings.cancelBoarding)
+                      : context.tr(AppStrings.confirmBoarding),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: isBoarded
                       ? AppColors.textSecondary

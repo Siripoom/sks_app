@@ -6,6 +6,7 @@ import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/providers/bus_provider.dart';
 import 'package:sks/providers/driver_provider.dart';
+import 'package:sks/providers/trip_provider.dart';
 import 'package:sks/screens/driver/driver_drivers_tab.dart';
 import 'package:sks/screens/driver/driver_home_tab.dart';
 import 'package:sks/screens/driver/driver_messages_tab.dart';
@@ -33,10 +34,12 @@ class _DriverMainScreenState extends State<DriverMainScreen> {
     final appState = context.read<AppStateProvider>();
     final driverProvider = context.read<DriverProvider>();
     final busProvider = context.read<BusProvider>();
+    final tripProvider = context.read<TripProvider>();
 
     final driverId = appState.currentUser?.referenceId ?? 'driver_01';
     driverProvider.loadDriverData(driverId);
-    busProvider.loadBusesForSchool('school_01');
+    busProvider.loadAllBuses();
+    tripProvider.loadAllTrips();
   }
 
   @override

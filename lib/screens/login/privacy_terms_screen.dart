@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/screens/parent/parent_main_screen.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
@@ -31,21 +32,24 @@ class PrivacyTermsScreen extends StatefulWidget {
 class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
   bool _accepted = false;
 
-  void _handleAccept() {
+  Future<void> _handleAccept() async {
     final appState = context.read<AppStateProvider>();
-    final success = appState.register(
+    final success = await appState.register(
       firstName: widget.firstName,
       lastName: widget.lastName,
       email: widget.email,
       phone: widget.phone,
       password: widget.password,
     );
+    if (!mounted) {
+      return;
+    }
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppStrings.registerSuccess,
+            context.tr(AppStrings.registerSuccess),
             style: GoogleFonts.prompt(),
           ),
           backgroundColor: AppColors.statusGreen,
@@ -56,13 +60,25 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
         MaterialPageRoute(builder: (_) => const ParentMainScreen()),
         (route) => false,
       );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            appState.errorMessage ?? context.tr(AppStrings.emailAlreadyExists),
+            style: GoogleFonts.prompt(),
+          ),
+          backgroundColor: AppColors.statusRed,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppStateProvider>();
+
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.privacyAndTerms)),
+      appBar: AppBar(title: Text(context.tr(AppStrings.privacyAndTerms))),
       body: Column(
         children: [
           Expanded(
@@ -87,7 +103,7 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            AppStrings.privacyPolicyTitle,
+                            context.tr(AppStrings.privacyPolicyTitle),
                             style: GoogleFonts.prompt(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -98,7 +114,7 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        AppStrings.privacyPolicyContent,
+                        context.tr(AppStrings.privacyPolicyContent),
                         style: GoogleFonts.prompt(
                           fontSize: 13,
                           height: 1.6,
@@ -117,7 +133,7 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            AppStrings.termsOfServiceTitle,
+                            context.tr(AppStrings.termsOfServiceTitle),
                             style: GoogleFonts.prompt(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -128,7 +144,7 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        AppStrings.termsOfServiceContent,
+                        context.tr(AppStrings.termsOfServiceContent),
                         style: GoogleFonts.prompt(
                           fontSize: 13,
                           height: 1.6,
@@ -170,7 +186,7 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            AppStrings.acceptTerms,
+                            context.tr(AppStrings.acceptTerms),
                             style: GoogleFonts.prompt(
                               fontSize: 13,
                               color: AppColors.textPrimary,
@@ -185,14 +201,25 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: _accepted ? _handleAccept : null,
-                      child: Text(
-                        AppStrings.acceptAndRegister,
-                        style: GoogleFonts.prompt(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      onPressed: _accepted && !appState.isBusy
+                          ? _handleAccept
+                          : null,
+                      child: appState.isBusy
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                color: AppColors.textOnPrimary,
+                              ),
+                            )
+                          : Text(
+                              context.tr(AppStrings.acceptAndRegister),
+                              style: GoogleFonts.prompt(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],

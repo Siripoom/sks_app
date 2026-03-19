@@ -4,16 +4,19 @@ import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
-import 'package:sks/data/mock_data.dart';
 import 'package:sks/models/app_user.dart';
 import 'package:sks/models/bus.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/models/driver.dart';
+import 'package:sks/models/school.dart';
+import 'package:sks/models/trip.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/providers/bus_provider.dart';
 import 'package:sks/providers/parent_provider.dart';
+import 'package:sks/providers/trip_provider.dart';
 import 'package:sks/screens/parent/bus_tracking_screen.dart';
 import 'package:sks/screens/parent/parent_notifications_screen.dart';
+import 'package:sks/services/reference_data_service.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/child_avatar.dart';
 import 'package:sks/widgets/common/section_header.dart';
@@ -36,65 +39,117 @@ class ParentHomeTab extends StatelessWidget {
     final appState = context.watch<AppStateProvider>();
     final parentProvider = context.watch<ParentProvider>();
     final busProvider = context.watch<BusProvider>();
+    final tripProvider = context.watch<TripProvider>();
+    final referenceDataService = context.read<IReferenceDataService>();
 
     final user = appState.currentUser;
     final children = parentProvider.myChildren;
     final assignedChildren = children.where((child) => child.isAssigned).toList();
     final primaryChild = assignedChildren.isNotEmpty ? assignedChildren.first : null;
-    final primaryBus = primaryChild?.busId != null
-        ? busProvider.getBusById(primaryChild!.busId!)
-        : null;
-    final primaryDriver = primaryBus != null
-        ? _findDriverByBusId(primaryBus.id)
-        : null;
+    final primaryTrip = tripProvider.getTripById(primaryChild?.tripId);
+    final primaryBus = _resolveBus(
+      busProvider: busProvider,
+      trip: primaryTrip,
+      child: primaryChild,
+    );
 
-    return ParentHomeContent(
-      user: user,
-      children: children,
-      notifications: parentProvider.notifications,
-      primaryBus: primaryBus,
-      primaryDriver: primaryDriver,
-      markers: _buildMarkers(assignedChildren, busProvider),
-      notificationCount: parentProvider.notifications.length,
-      onNotificationTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ParentNotificationsScreen()),
+    return FutureBuilder<List<School>>(
+      future: referenceDataService.getSchools(),
+      builder: (context, schoolSnapshot) {
+        final schoolsById = {
+          for (final school in schoolSnapshot.data ?? const <School>[])
+            school.id: school,
+        };
+        final primarySchool = primaryChild == null
+            ? null
+            : schoolsById[primaryChild.schoolId];
+
+        return FutureBuilder<Driver?>(
+          future: primaryBus == null
+              ? Future<Driver?>.value(null)
+              : referenceDataService.getDriverById(primaryBus.driverId),
+          builder: (context, driverSnapshot) {
+            return ParentHomeContent(
+              user: user,
+              primarySchool: primarySchool,
+              children: children,
+              notifications: parentProvider.notifications,
+              tripsById: {
+                for (final trip in tripProvider.trips) trip.id: trip,
+              },
+              schoolsById: schoolsById,
+              busesById: {
+                for (final bus in busProvider.buses) bus.id: bus,
+              },
+              primaryTrip: primaryTrip,
+              primaryBus: primaryBus,
+              primaryDriver: driverSnapshot.data,
+              markers: _buildMarkers(
+                children: assignedChildren,
+                busProvider: busProvider,
+                tripProvider: tripProvider,
+                schoolsById: schoolsById,
+              ),
+              notificationCount: parentProvider.notifications.length,
+              onNotificationTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ParentNotificationsScreen(),
+                  ),
+                );
+              },
+              onOpenSchedule: onOpenSchedule,
+              onMapTap: primaryChild == null || primaryBus == null
+                  ? null
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BusTrackingScreen(
+                            busId: primaryBus.id,
+                            childName: primaryChild.name,
+                            schoolId: primaryChild.schoolId,
+                          ),
+                        ),
+                      );
+                    },
+              mapBuilder: mapBuilder,
+            );
+          },
         );
       },
-      onOpenSchedule: onOpenSchedule,
-      onMapTap: primaryChild == null
-          ? null
-          : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BusTrackingScreen(
-                    busId: primaryChild.busId!,
-                    childName: primaryChild.name,
-                  ),
-                ),
-              );
-            },
-      mapBuilder: mapBuilder,
     );
   }
 
-  Driver? _findDriverByBusId(String busId) {
-    try {
-      return MockData.drivers.firstWhere((driver) => driver.busId == busId);
-    } catch (_) {
+  static Bus? _resolveBus({
+    required BusProvider busProvider,
+    required Trip? trip,
+    required Child? child,
+  }) {
+    final busId = trip?.busId ?? child?.busId;
+    if (busId == null || busId.isEmpty) {
       return null;
     }
+    return busProvider.getBusById(busId);
   }
 
-  Set<Marker> _buildMarkers(List<Child> children, BusProvider busProvider) {
+  Set<Marker> _buildMarkers({
+    required List<Child> children,
+    required BusProvider busProvider,
+    required TripProvider tripProvider,
+    required Map<String, School> schoolsById,
+  }) {
     final markers = <Marker>{};
+    final seenSchools = <String>{};
+
     for (final child in children) {
-      if (child.busId == null) {
-        continue;
-      }
-      final bus = busProvider.getBusById(child.busId!);
+      final trip = tripProvider.getTripById(child.tripId);
+      final bus = _resolveBus(
+        busProvider: busProvider,
+        trip: trip,
+        child: child,
+      );
       if (bus != null) {
         markers.add(
           Marker(
@@ -107,21 +162,32 @@ class ParentHomeTab extends StatelessWidget {
           ),
         );
       }
+
+      final school = schoolsById[child.schoolId];
+      if (school != null && seenSchools.add(school.id)) {
+        markers.add(
+          Marker(
+            markerId: MarkerId('school-${school.id}'),
+            position: LatLng(school.lat, school.lng),
+            infoWindow: InfoWindow(title: school.name),
+          ),
+        );
+      }
     }
-    markers.add(
-      const Marker(
-        markerId: MarkerId('school'),
-        position: LatLng(13.7563, 100.5018),
-      ),
-    );
+
     return markers;
   }
 }
 
 class ParentHomeContent extends StatelessWidget {
   final AppUser? user;
+  final School? primarySchool;
   final List<Child> children;
   final List<Map<String, String>> notifications;
+  final Map<String, Trip> tripsById;
+  final Map<String, School> schoolsById;
+  final Map<String, Bus> busesById;
+  final Trip? primaryTrip;
   final Bus? primaryBus;
   final Driver? primaryDriver;
   final Set<Marker> markers;
@@ -134,8 +200,13 @@ class ParentHomeContent extends StatelessWidget {
   const ParentHomeContent({
     super.key,
     required this.user,
+    required this.primarySchool,
     required this.children,
     required this.notifications,
+    required this.tripsById,
+    required this.schoolsById,
+    required this.busesById,
+    required this.primaryTrip,
     required this.primaryBus,
     required this.primaryDriver,
     required this.markers,
@@ -149,7 +220,11 @@ class ParentHomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final assignedChildren = children.where((child) => child.isAssigned).toList();
-    final schedule = _resolveTodaySchedule();
+    final schedule = _resolveSchedule(
+      date: DateTime.now(),
+      school: primarySchool,
+      trip: primaryTrip,
+    );
 
     return SingleChildScrollView(
       key: const PageStorageKey('parent-home-scroll'),
@@ -180,7 +255,7 @@ class ParentHomeContent extends StatelessWidget {
               tooltip: context.tr(AppStrings.busSchedule),
             ),
           ),
-          _buildHistoryCard(context, schedule),
+          _buildHistoryCard(context),
           const SizedBox(height: 96),
         ],
       ),
@@ -238,6 +313,11 @@ class ParentHomeContent extends StatelessWidget {
       );
     }
 
+    final schoolLatLng = LatLng(
+      primarySchool?.lat ?? 13.7563,
+      primarySchool?.lng ?? 100.5018,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
@@ -250,8 +330,8 @@ class ParentHomeContent extends StatelessWidget {
                 ? mapBuilder!(context, markers)
                 : AbsorbPointer(
                     child: GoogleMap(
-                      initialCameraPosition: const CameraPosition(
-                        target: LatLng(13.7563, 100.5018),
+                      initialCameraPosition: CameraPosition(
+                        target: schoolLatLng,
                         zoom: 12,
                       ),
                       liteModeEnabled: true,
@@ -303,12 +383,12 @@ class ParentHomeContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      MockData.school.name,
+                      primarySchool?.name ?? '',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${primaryBus!.busNumber} • ${primaryDriver!.name}',
+                      '${primaryBus!.busNumber} - ${primaryDriver!.name}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -389,10 +469,7 @@ class ParentHomeContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                child.name,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
+              Text(child.name, style: Theme.of(context).textTheme.titleSmall),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -414,9 +491,12 @@ class ParentHomeContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    '${context.tr(AppStrings.boardingTime)} $boardedTime',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  Expanded(
+                    child: Text(
+                      '${context.tr(AppStrings.boardingTime)} $boardedTime',
+                      style: Theme.of(context).textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -427,7 +507,7 @@ class ParentHomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryCard(BuildContext context, _ResolvedSchedule schedule) {
+  Widget _buildHistoryCard(BuildContext context) {
     if (children.isEmpty) {
       return _buildInfoCard(context, AppStrings.noHistoryToday);
     }
@@ -440,7 +520,7 @@ class ParentHomeContent extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            _buildHistoryItem(context, children[i], schedule),
+            _buildHistoryItem(context, children[i]),
             if (i != children.length - 1)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
@@ -452,11 +532,16 @@ class ParentHomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryItem(
-    BuildContext context,
-    Child child,
-    _ResolvedSchedule schedule,
-  ) {
+  Widget _buildHistoryItem(BuildContext context, Child child) {
+    final trip = tripsById[child.tripId];
+    final school = schoolsById[child.schoolId];
+    final bus = busesById[trip?.busId ?? child.busId];
+    final schedule = _resolveSchedule(
+      date: DateTime.now(),
+      school: school,
+      trip: trip,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -474,11 +559,14 @@ class ParentHomeContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(child.name, style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    child.name,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     child.isAssigned
-                        ? 'รถ ${child.busId!.replaceFirst('bus_', 'สาย ')}'
+                        ? '${bus?.busNumber ?? context.tr(AppStrings.notAssigned)} - ${school?.name ?? child.schoolName}'
                         : context.tr(AppStrings.waitingForRoute),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
@@ -505,7 +593,7 @@ class ParentHomeContent extends StatelessWidget {
             iconColor: AppColors.statusAmber,
             label: context.tr(AppStrings.morningRound),
             value:
-                'รับ ${schedule.morningPickup} น. • ส่ง ${schedule.morningDropoff} น.',
+                'รับ ${schedule.morningPickup} น. - ส่ง ${schedule.morningDropoff} น.',
           ),
           const SizedBox(height: 8),
           _buildTripTimeRow(
@@ -514,7 +602,7 @@ class ParentHomeContent extends StatelessWidget {
             iconColor: AppColors.accentBlue,
             label: context.tr(AppStrings.afternoonRound),
             value:
-                'รับ ${schedule.eveningPickup} น. • ส่ง ${schedule.eveningDropoff} น.',
+                'รับ ${schedule.eveningPickup} น. - ส่ง ${schedule.eveningDropoff} น.',
           ),
         ],
       ],
@@ -540,7 +628,13 @@ class ParentHomeContent extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Text(value, style: Theme.of(context).textTheme.bodySmall),
+        Flexible(
+          child: Text(
+            value,
+            style: Theme.of(context).textTheme.bodySmall,
+            textAlign: TextAlign.end,
+          ),
+        ),
       ],
     );
   }
@@ -558,30 +652,39 @@ class ParentHomeContent extends StatelessWidget {
     );
   }
 
-  _ResolvedSchedule _resolveTodaySchedule() {
-    final now = DateTime.now();
-    if (now.weekday == DateTime.saturday || now.weekday == DateTime.sunday) {
-      return const _ResolvedSchedule.noService();
-    }
+  _ResolvedSchedule _resolveSchedule({
+    required DateTime date,
+    required School? school,
+    required Trip? trip,
+  }) {
+    final sameDay = _isSameDay(trip?.serviceDate, date);
+    final weekdayHasService =
+        date.weekday != DateTime.saturday && date.weekday != DateTime.sunday;
 
-    String morningPickup = '--:--';
-    String morningDropoff = '--:--';
-    String eveningPickup = '--:--';
-    String eveningDropoff = '--:--';
+    var morningPickup = school?.morningPickup.isNotEmpty == true
+        ? school!.morningPickup
+        : '--:--';
+    var morningDropoff = school?.morningDropoff.isNotEmpty == true
+        ? school!.morningDropoff
+        : '--:--';
+    var eveningPickup = school?.eveningPickup.isNotEmpty == true
+        ? school!.eveningPickup
+        : '--:--';
+    var eveningDropoff = school?.eveningDropoff.isNotEmpty == true
+        ? school!.eveningDropoff
+        : '--:--';
 
-    for (final schedule in MockData.mockSchedule) {
-      if (schedule['period'] == AppStrings.morningRound) {
-        morningPickup = schedule['pickup'] ?? morningPickup;
-        morningDropoff = schedule['dropoff'] ?? morningDropoff;
-      }
-      if (schedule['period'] == AppStrings.afternoonRound) {
-        eveningPickup = schedule['pickup'] ?? eveningPickup;
-        eveningDropoff = schedule['dropoff'] ?? eveningDropoff;
+    if (sameDay && trip?.scheduledStartAt != null) {
+      final tripTime = _formatTime(trip!.scheduledStartAt!);
+      if (trip.round == TripRound.toSchool) {
+        morningPickup = tripTime;
+      } else {
+        eveningPickup = tripTime;
       }
     }
 
     return _ResolvedSchedule(
-      hasService: true,
+      hasService: sameDay || weekdayHasService,
       morningPickup: morningPickup,
       morningDropoff: morningDropoff,
       eveningPickup: eveningPickup,
@@ -591,7 +694,10 @@ class ParentHomeContent extends StatelessWidget {
 
   _StudentStatus _resolveStudentStatus(Child child) {
     if (!child.isAssigned) {
-      return const _StudentStatus(AppStrings.waitingForRoute, AppColors.textSecondary);
+      return const _StudentStatus(
+        AppStrings.waitingForRoute,
+        AppColors.textSecondary,
+      );
     }
     if (child.hasArrived) {
       return const _StudentStatus(
@@ -602,7 +708,10 @@ class ParentHomeContent extends StatelessWidget {
     if (child.hasBoarded) {
       return const _StudentStatus(AppStrings.boardedStatus, AppColors.primary);
     }
-    return const _StudentStatus(AppStrings.waitingToBoard, AppColors.statusAmber);
+    return const _StudentStatus(
+      AppStrings.waitingToBoard,
+      AppColors.statusAmber,
+    );
   }
 
   String _findBoardingTime(String childName) {
@@ -614,6 +723,21 @@ class ParentHomeContent extends StatelessWidget {
       }
     }
     return '--:--';
+  }
+
+  String _formatTime(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  bool _isSameDay(DateTime? left, DateTime right) {
+    if (left == null) {
+      return false;
+    }
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
   }
 
   Future<void> _callDriver(BuildContext context, String phone) async {
@@ -649,13 +773,6 @@ class _ResolvedSchedule {
     required this.eveningPickup,
     required this.eveningDropoff,
   });
-
-  const _ResolvedSchedule.noService()
-    : hasService = false,
-      morningPickup = '--:--',
-      morningDropoff = '--:--',
-      eveningPickup = '--:--',
-      eveningDropoff = '--:--';
 }
 
 class _StudentStatus {

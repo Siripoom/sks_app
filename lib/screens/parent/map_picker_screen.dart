@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
 class PickupLocationResult {
@@ -36,13 +38,17 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         : _defaultLocation;
   }
 
-  String get _selectedLabel =>
-      'ตำแหน่งที่เลือก (${_selectedLocation.latitude.toStringAsFixed(4)}, ${_selectedLocation.longitude.toStringAsFixed(4)})';
+  String _selectedLabel(BuildContext context) {
+    return context.trArgs(AppStrings.selectedCoordinates, {
+      'lat': _selectedLocation.latitude.toStringAsFixed(4),
+      'lng': _selectedLocation.longitude.toStringAsFixed(4),
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('เลือกตำแหน่งรับส่ง')),
+      appBar: AppBar(title: Text(context.tr(AppStrings.choosePickupLocation))),
       body: Stack(
         children: [
           GoogleMap(
@@ -78,13 +84,16 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'แตะบนแผนที่หรือเลื่อน marker เพื่อเลือกจุดรับส่ง',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                  Text(
+                    context.tr(AppStrings.mapPickerHint),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _selectedLabel,
+                    _selectedLabel(context),
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF6B7280),
@@ -100,11 +109,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                           PickupLocationResult(
                             lat: _selectedLocation.latitude,
                             lng: _selectedLocation.longitude,
-                            label: _selectedLabel,
+                            label: _selectedLabel(context),
                           ),
                         );
                       },
-                      child: const Text('ยืนยันตำแหน่งนี้'),
+                      child: Text(context.tr(AppStrings.confirmThisLocation)),
                     ),
                   ),
                 ],

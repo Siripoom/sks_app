@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "354366613674",
+    "project_id": "sks-app-d980c",
+    "storage_bucket": "sks-app-d980c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:354366613674:android:5773629eaf8eea37b448d3",
+        "android_client_info": {
+          "package_name": "com.sks.aapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLYmVbgRgm8muTj6B3SqUQvh9crwVOaco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -7,6 +7,7 @@ import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/app_user.dart';
 import 'package:sks/providers/app_state_provider.dart';
+import 'package:sks/screens/admin/admin_main_screen.dart';
 import 'package:sks/screens/driver/driver_main_screen.dart';
 import 'package:sks/screens/login/register_screen.dart';
 import 'package:sks/screens/parent/parent_main_screen.dart';
@@ -21,8 +22,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  static const String _welcomeSubtitle = 'Safe You Can See, Every Mile';
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showTestAccounts = false;
@@ -70,13 +69,16 @@ class _LoginScreenState extends State<LoginScreen>
     controller.forward();
   }
 
-  void _login() {
+  Future<void> _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     if (email.isEmpty || password.isEmpty) return;
 
     final appState = context.read<AppStateProvider>();
-    final success = appState.login(email, password);
+    final success = await appState.login(email, password);
+    if (!mounted) {
+      return;
+    }
 
     if (success) {
       _navigateToRoleScreen(appState.selectedRole!);
@@ -84,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.tr(AppStrings.loginFailed),
+            appState.errorMessage ?? context.tr(AppStrings.loginFailed),
             style: GoogleFonts.prompt(),
           ),
           backgroundColor: AppColors.statusRed,
@@ -102,6 +104,8 @@ class _LoginScreenState extends State<LoginScreen>
         screen = const TeacherDashboardScreen();
       case UserRole.driver:
         screen = const DriverMainScreen();
+      case UserRole.admin:
+        screen = const AdminMainScreen();
     }
     Navigator.pushReplacement(
       context,
@@ -111,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _fillCredentials(String email) {
     _emailController.text = email;
-    _passwordController.text = '1234';
+    _passwordController.text = '123456';
     setState(() => _showTestAccounts = false);
   }
 
@@ -222,6 +226,8 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildLoginCard() {
+    final appState = context.watch<AppStateProvider>();
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(34),
@@ -320,14 +326,23 @@ class _LoginScreenState extends State<LoginScreen>
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _login,
-                        child: Text(
-                          context.tr(AppStrings.loginButton),
-                          style: GoogleFonts.prompt(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        onPressed: appState.isBusy ? null : _login,
+                        child: appState.isBusy
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: AppColors.textOnPrimary,
+                                ),
+                              )
+                            : Text(
+                                context.tr(AppStrings.loginButton),
+                                style: GoogleFonts.prompt(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -356,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen>
           Transform.translate(
             offset: const Offset(-18, 0),
             child: Text(
-              'Welcome',
+              context.tr(AppStrings.welcome),
               style: GoogleFonts.nunito(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
@@ -419,18 +434,18 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 6),
         Text(
-          'SHUTTLE',
+          context.tr(AppStrings.smartKidsShuttle).toUpperCase(),
           textAlign: TextAlign.center,
           style: GoogleFonts.montserrat(
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w800,
-            letterSpacing: 5.2,
+            letterSpacing: 2.4,
             color: const Color(0xFFE18B31),
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          _welcomeSubtitle,
+          context.tr(AppStrings.welcomeSubtitle),
           textAlign: TextAlign.center,
           style: GoogleFonts.prompt(
             fontSize: 12,
@@ -514,9 +529,14 @@ class _LoginScreenState extends State<LoginScreen>
                     'driver1@sks.com',
                     'driver2@sks.com',
                   ]),
+                  const SizedBox(height: 10),
+                  _buildAccountGroup(
+                    context.tr(AppStrings.roleAdmin),
+                    ['admin@sks.com'],
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                    '${context.tr(AppStrings.password)}: 1234',
+                    '${context.tr(AppStrings.password)}: 123456',
                     style: GoogleFonts.prompt(
                       fontSize: 11,
                       color: AppColors.textSecondary,

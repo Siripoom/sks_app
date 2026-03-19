@@ -1,19 +1,45 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:sks/data/mock_data.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sks/models/app_user.dart';
-import 'package:sks/models/parent.dart';
-import 'package:uuid/uuid.dart';
+import 'package:sks/services/auth_service.dart';
+import 'package:sks/services/notification_service.dart';
 
 enum AppLanguage { thai, english }
 
 class AppStateProvider extends ChangeNotifier {
+  AppStateProvider(
+    this._authService,
+    this._notificationService, {
+    required SharedPreferences preferences,
+    required Locale initialLocale,
+  })  : _preferences = preferences,
+        _locale = _normalizeLocale(initialLocale) {
+    unawaited(_restoreSession());
+  }
+
+  final IAuthService _authService;
+  final INotificationService _notificationService;
+  final SharedPreferences _preferences;
+
+  static const _localePreferenceKey = 'app_locale';
+
   UserRole? _selectedRole;
   AppUser? _currentUser;
-  Locale _locale = const Locale('th');
+  Locale _locale;
+  bool _isInitializing = true;
+  bool _isBusy = false;
+  String? _errorMessage;
 
   UserRole? get selectedRole => _selectedRole;
   AppUser? get currentUser => _currentUser;
   Locale get locale => _locale;
+  bool get isInitializing => _isInitializing;
+  bool get isBusy => _isBusy;
+  String? get errorMessage => _errorMessage;
   AppLanguage get language =>
       _locale.languageCode == 'en' ? AppLanguage.english : AppLanguage.thai;
 
@@ -23,83 +49,121 @@ class AppStateProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setLanguage(AppLanguage language) {
+  Future<void> setLanguage(AppLanguage language) async {
     _locale = Locale(language == AppLanguage.english ? 'en' : 'th');
+    await _preferences.setString(_localePreferenceKey, _locale.languageCode);
     notifyListeners();
   }
 
-  void updateCurrentUserProfilePhoto(String path) {
+  static Locale localeFromPreferences(
+    SharedPreferences preferences,
+    Locale fallbackLocale,
+  ) {
+    final savedLanguageCode = preferences.getString(_localePreferenceKey);
+    if (savedLanguageCode != null &&
+        (savedLanguageCode == 'en' || savedLanguageCode == 'th')) {
+      return Locale(savedLanguageCode);
+    }
+    return _normalizeLocale(fallbackLocale);
+  }
+
+  static Locale _normalizeLocale(Locale locale) {
+    return locale.languageCode == 'en' ? const Locale('en') : const Locale('th');
+  }
+
+  Future<void> updateCurrentUserProfilePhoto(
+    XFile? photo, {
+    bool clear = false,
+  }) async {
     if (_currentUser == null) {
       return;
     }
 
-    final updated = _currentUser!.copyWith(profilePhotoPath: path);
+    final updated = await _authService.updateProfilePhoto(
+      _currentUser!,
+      photo: photo,
+      clear: clear,
+    );
     _currentUser = updated;
-    MockData.updateAppUser(updated);
     notifyListeners();
   }
 
-  /// Mock login: returns true if credentials match, sets currentUser and role.
-  bool login(String email, String password) {
-    final cred = MockData.mockCredentials[email];
-    if (cred == null || cred['password'] != password) return false;
-
-    final appUser = MockData.findAppUserById(cred['appUserId'] as String);
-    if (appUser == null) return false;
-
-    _currentUser = appUser;
-    _selectedRole = appUser.role;
-    notifyListeners();
-    return true;
+  Future<bool> login(String email, String password) async {
+    return _runGuarded(() async {
+      final appUser = await _authService.signIn(
+        email: email,
+        password: password,
+      );
+      await _setCurrentUser(appUser);
+      return true;
+    });
   }
 
-  /// Register a new parent user. Returns true on success.
-  bool register({
+  Future<bool> register({
     required String firstName,
     required String lastName,
     required String email,
     required String phone,
     required String password,
-  }) {
-    if (MockData.mockCredentials.containsKey(email)) return false;
-
-    final uid = const Uuid().v4().substring(0, 8);
-    final parentId = 'parent_$uid';
-    final appUserId = 'appuser_p$uid';
-    final fullName = '$firstName $lastName';
-
-    final newParent = Parent(
-      id: parentId,
-      name: fullName,
-      phone: phone,
-      childIds: [],
-    );
-    MockData.parents.add(newParent);
-
-    final newAppUser = AppUser(
-      id: appUserId,
-      name: fullName,
-      role: UserRole.parent,
-      referenceId: parentId,
-      profilePhotoPath: '',
-    );
-    MockData.parentUsers.add(newAppUser);
-
-    MockData.mockCredentials[email] = {
-      'password': password,
-      'appUserId': appUserId,
-      'role': 'parent',
-    };
-
-    _currentUser = newAppUser;
-    _selectedRole = UserRole.parent;
-    notifyListeners();
-    return true;
+  }) async {
+    return _runGuarded(() async {
+      final appUser = await _authService.registerParent(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        password: password,
+      );
+      await _setCurrentUser(appUser);
+      return true;
+    });
   }
 
-  void logout() {
+  Future<void> logout() async {
+    await _authService.signOut();
     _selectedRole = null;
     _currentUser = null;
+    _errorMessage = null;
     notifyListeners();
+  }
+
+  Future<void> _restoreSession() async {
+    try {
+      final appUser = await _authService.restoreSession();
+      if (appUser != null) {
+        await _setCurrentUser(appUser, notify: false);
+      }
+    } finally {
+      _isInitializing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _setCurrentUser(AppUser appUser, {bool notify = true}) async {
+    _currentUser = appUser;
+    _selectedRole = appUser.role;
+    await _notificationService.registerDeviceForUser(appUser);
+    if (notify) {
+      notifyListeners();
+    }
+  }
+
+  Future<bool> _runGuarded(Future<bool> Function() action) async {
+    _isBusy = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      return await action();
+    } on FirebaseAuthException catch (error) {
+      _errorMessage = error.message ?? error.code;
+      return false;
+    } catch (error) {
+      _errorMessage = error.toString();
+      return false;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
   }
 }

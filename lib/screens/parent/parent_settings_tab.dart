@@ -36,11 +36,14 @@ class _ParentSettingsTabState extends State<ParentSettingsTab> {
       return;
     }
 
-    context.read<AppStateProvider>().updateCurrentUserProfilePhoto(photo.path);
+    await context.read<AppStateProvider>().updateCurrentUserProfilePhoto(photo);
   }
 
-  void _removeProfilePhoto() {
-    context.read<AppStateProvider>().updateCurrentUserProfilePhoto('');
+  Future<void> _removeProfilePhoto() async {
+    await context.read<AppStateProvider>().updateCurrentUserProfilePhoto(
+      null,
+      clear: true,
+    );
   }
 
   @override
@@ -168,18 +171,18 @@ class _ParentSettingsTabState extends State<ParentSettingsTab> {
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  context.read<AppStateProvider>().logout();
+                onPressed: () async {
+                  await context.read<AppStateProvider>().logout();
+                  if (!context.mounted) {
+                    return;
+                  }
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
                     (route) => false,
                   );
                 },
-                icon: const Icon(
-                  Icons.logout,
-                  color: AppColors.statusRed,
-                ),
+                icon: const Icon(Icons.logout, color: AppColors.statusRed),
                 label: Text(
                   context.tr(AppStrings.logout),
                   style: const TextStyle(

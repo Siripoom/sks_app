@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -40,7 +42,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('สแกน QR Code'),
+        title: Text(context.tr(AppStrings.scanQrCode)),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
@@ -57,14 +59,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             left: 24,
             right: 24,
             bottom: 48,
             child: Text(
-              'เล็งกล้องไปที่ QR ของนักเรียนเพื่อเช็กอินขึ้นรถ',
+              context.tr(AppStrings.qrScannerHint),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

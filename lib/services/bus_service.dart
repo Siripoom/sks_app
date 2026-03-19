@@ -1,78 +1,88 @@
-import 'package:sks/data/mock_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sks/models/bus.dart';
-import 'package:sks/models/bus_stop.dart';
 
 abstract class IBusService {
-  Future<List<Bus>> getBusesBySchoolId(String schoolId);
+  Stream<List<Bus>> watchAllBuses();
+  Future<List<Bus>> getBusesByIds(Iterable<String> busIds);
   Future<Bus?> getBusById(String busId);
   Future<Bus?> getBusByDriverId(String driverId);
   Future<bool> updateBusStatus(String busId, BusStatus status);
   Future<bool> updateBusLocation(String busId, double lat, double lng);
-  Future<List<BusStop>> getBusStopsByBusId(String busId);
 }
 
-class MockBusService implements IBusService {
-  final List<Bus> _buses = List.from(MockData.buses);
-  final List<BusStop> _busStops = List.from(MockData.busStops);
+class FirebaseBusService implements IBusService {
+  FirebaseBusService(this._firestore);
+
+  final FirebaseFirestore _firestore;
+
+  CollectionReference<Map<String, dynamic>> get _buses =>
+      _firestore.collection('buses');
+
+  Iterable<Bus> _activeBuses(Iterable<Bus> buses) =>
+      buses.where((bus) => !bus.isArchived);
 
   @override
-  Future<List<Bus>> getBusesBySchoolId(String schoolId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return _buses.where((b) => b.schoolId == schoolId).toList();
+  Stream<List<Bus>> watchAllBuses() {
+    return _buses.snapshots().map((snapshot) {
+      final buses = _activeBuses(
+        snapshot.docs.map((doc) => Bus.fromMap(doc.id, doc.data())),
+      ).toList();
+      buses.sort((a, b) => a.busNumber.compareTo(b.busNumber));
+      return buses;
+    });
+  }
+
+  @override
+  Future<List<Bus>> getBusesByIds(Iterable<String> busIds) async {
+    final ids = busIds.toSet().where((id) => id.trim().isNotEmpty).toList();
+    if (ids.isEmpty) {
+      return const [];
+    }
+
+    final snapshot = await _buses
+        .where(FieldPath.documentId, whereIn: ids)
+        .get();
+    final buses = _activeBuses(
+      snapshot.docs.map((doc) => Bus.fromMap(doc.id, doc.data())),
+    ).toList();
+    buses.sort((a, b) => ids.indexOf(a.id).compareTo(ids.indexOf(b.id)));
+    return buses;
   }
 
   @override
   Future<Bus?> getBusById(String busId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    try {
-      return _buses.firstWhere((b) => b.id == busId);
-    } catch (e) {
+    final snapshot = await _buses.doc(busId).get();
+    final data = snapshot.data();
+    if (data == null) {
       return null;
     }
+    final bus = Bus.fromMap(snapshot.id, data);
+    return bus.isArchived ? null : bus;
   }
 
   @override
   Future<Bus?> getBusByDriverId(String driverId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    try {
-      return _buses.firstWhere((b) => b.driverId == driverId);
-    } catch (e) {
+    final snapshot = await _buses
+        .where('driverId', isEqualTo: driverId)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) {
       return null;
     }
+    final doc = snapshot.docs.first;
+    final bus = Bus.fromMap(doc.id, doc.data());
+    return bus.isArchived ? null : bus;
   }
 
   @override
   Future<bool> updateBusStatus(String busId, BusStatus status) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final index = _buses.indexWhere((b) => b.id == busId);
-    if (index != -1) {
-      _buses[index].status = status;
-      return true;
-    }
-    return false;
+    await _buses.doc(busId).update({'status': status.value});
+    return true;
   }
 
   @override
   Future<bool> updateBusLocation(String busId, double lat, double lng) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final index = _buses.indexWhere((b) => b.id == busId);
-    if (index != -1) {
-      _buses[index].currentLat = lat;
-      _buses[index].currentLng = lng;
-      return true;
-    }
-    return false;
+    await _buses.doc(busId).update({'currentLat': lat, 'currentLng': lng});
+    return true;
   }
-
-  @override
-  Future<List<BusStop>> getBusStopsByBusId(String busId) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final bus = await getBusById(busId);
-    if (bus == null) return [];
-    return _busStops
-        .where((s) => bus.childIds.any((cId) => s.childIds.contains(cId)))
-        .toList();
-  }
-
-  List<Bus> getBuses() => _buses;
 }

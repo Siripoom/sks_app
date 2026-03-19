@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
 class TripInfoCard extends StatelessWidget {
@@ -49,7 +50,7 @@ class TripInfoCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${AppStrings.licensePlate}: $licensePlate',
+                  '${context.tr(AppStrings.licensePlate)}: $licensePlate',
                   style: GoogleFonts.prompt(
                     fontSize: 12,
                     color: AppColors.textSecondary,

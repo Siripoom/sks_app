@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/bus.dart';
 
 class StatusBadge extends StatelessWidget {
@@ -9,14 +10,14 @@ class StatusBadge extends StatelessWidget {
 
   const StatusBadge({super.key, required this.status, this.small = false});
 
-  String _getStatusText() {
+  String _getStatusText(BuildContext context) {
     switch (status) {
       case BusStatus.waiting:
-        return AppStrings.busWaiting;
+        return context.tr(AppStrings.busWaiting);
       case BusStatus.enRoute:
-        return AppStrings.busEnRoute;
+        return context.tr(AppStrings.busEnRoute);
       case BusStatus.arrived:
-        return AppStrings.busArrived;
+        return context.tr(AppStrings.busArrived);
     }
   }
 
@@ -43,7 +44,7 @@ class StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        _getStatusText(),
+        _getStatusText(context),
         style: TextStyle(
           color: _getStatusColor(),
           fontWeight: FontWeight.w600,

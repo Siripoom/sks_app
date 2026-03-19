@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
+import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/child_avatar.dart';
@@ -58,7 +60,7 @@ class StudentPickupTile extends StatelessWidget {
                     Text(child.name),
                     Text(
                       child.busId != null
-                          ? 'รถ ${child.busId!.replaceFirst('bus_', 'สาย ')}'
+                          ? '${context.tr(AppStrings.busLabel)} ${child.busId!}'
                           : child.pickupLabel,
                       style: GoogleFonts.prompt(
                         fontSize: 11,
@@ -69,11 +71,15 @@ class StudentPickupTile extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
-                  color:
-                      (isBoarded ? AppColors.statusGreen : AppColors.surfaceSoft)
-                          .withValues(alpha: isBoarded ? 0.08 : 1),
+                  color: (isBoarded
+                          ? AppColors.statusGreen
+                          : AppColors.surfaceSoft)
+                      .withValues(alpha: isBoarded ? 0.08 : 1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -90,7 +96,9 @@ class StudentPickupTile extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      isBoarded ? 'เช็กอินแล้ว' : 'รอสแกน QR',
+                      isBoarded
+                          ? context.tr(AppStrings.checkedInAlready)
+                          : context.tr(AppStrings.waitingForQrScan),
                       style: GoogleFonts.prompt(
                         color: isBoarded
                             ? AppColors.statusGreen
@@ -115,7 +123,11 @@ class StudentPickupTile extends StatelessWidget {
                     : HugeIcons.strokeRoundedCheckmarkCircle02,
                 size: 18,
               ),
-              label: Text(isBoarded ? 'ยกเลิกขึ้นรถ' : 'ยืนยันขึ้นรถ'),
+              label: Text(
+                isBoarded
+                    ? context.tr(AppStrings.cancelBoarding)
+                    : context.tr(AppStrings.confirmBoarding),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: isBoarded
                     ? AppColors.textSecondary

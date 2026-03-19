@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final String? message;
@@ -22,7 +23,7 @@ class EmptyStateWidget extends StatelessWidget {
           Icon(icon, size: 64, color: AppColors.textSecondary),
           const SizedBox(height: 16),
           Text(
-            message ?? AppStrings.noData,
+            context.tr(message ?? AppStrings.noData),
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 16,

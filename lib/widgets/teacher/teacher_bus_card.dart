@@ -3,57 +3,79 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
-import 'package:sks/data/mock_data.dart';
+import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/bus.dart';
 import 'package:sks/models/child.dart';
+import 'package:sks/models/trip.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
 class TeacherBusCard extends StatelessWidget {
-  final Bus bus;
+  final Trip trip;
+  final Bus? bus;
   final List<Child> children;
+  final String driverName;
+  final String schoolName;
   final VoidCallback onTap;
 
   const TeacherBusCard({
     super.key,
+    required this.trip,
     required this.bus,
     required this.children,
+    required this.driverName,
+    required this.schoolName,
     required this.onTap,
   });
 
-  String _getStatusText() {
-    switch (bus.status) {
-      case BusStatus.waiting:
-        return AppStrings.busWaiting;
-      case BusStatus.enRoute:
-        return AppStrings.busEnRoute;
-      case BusStatus.arrived:
-        return AppStrings.busArrived;
+  String _getStatusText(BuildContext context) {
+    switch (trip.status) {
+      case TripStatus.draft:
+        return context.tr(AppStrings.busWaiting);
+      case TripStatus.active:
+        return context.tr(AppStrings.busEnRoute);
+      case TripStatus.completed:
+        return context.tr(AppStrings.busArrived);
+      case TripStatus.cancelled:
+        return 'Cancelled';
     }
   }
 
   Color _getStatusColor() {
-    switch (bus.status) {
-      case BusStatus.waiting:
+    switch (trip.status) {
+      case TripStatus.draft:
         return AppColors.statusGrey;
-      case BusStatus.enRoute:
+      case TripStatus.active:
         return AppColors.statusAmber;
-      case BusStatus.arrived:
+      case TripStatus.completed:
         return AppColors.statusGreen;
+      case TripStatus.cancelled:
+        return AppColors.statusRed;
     }
+  }
+
+  String _roundLabel(BuildContext context) {
+    return trip.round == TripRound.toSchool
+        ? context.tr(AppStrings.morningRound)
+        : context.tr(AppStrings.afternoonRound);
+  }
+
+  String _scheduledTime() {
+    final scheduled = trip.scheduledStartAt;
+    if (scheduled == null) {
+      return '--:--';
+    }
+    final hour = scheduled.hour.toString().padLeft(2, '0');
+    final minute = scheduled.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   @override
   Widget build(BuildContext context) {
-    final driver = MockData.drivers.firstWhere(
-      (d) => d.id == bus.driverId,
-      orElse: () => MockData.drivers.first,
-    );
-    final licensePlate = MockData.busLicensePlates[bus.id] ?? '';
-    final minutesAway = bus.estimatedArrival
+    final statusColor = _getStatusColor();
+    final minutesAway = bus?.estimatedArrival
         ?.difference(DateTime.now())
         .inMinutes
         .clamp(0, 999);
-    final statusColor = _getStatusColor();
 
     return GestureDetector(
       onTap: onTap,
@@ -88,35 +110,24 @@ class TeacherBusCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'รถ ${bus.busNumber}',
+                        '${bus?.busNumber ?? context.tr(AppStrings.unassignedLabel)} - ${_roundLabel(context)}',
                         style: GoogleFonts.prompt(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _getStatusText(),
-                          style: GoogleFonts.prompt(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
-                          ),
+                      Text(
+                        schoolName,
+                        style: GoogleFonts.prompt(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-                if (minutesAway != null && bus.status == BusStatus.enRoute)
+                if (minutesAway != null && trip.status == TripStatus.active)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -127,7 +138,7 @@ class TeacherBusCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '$minutesAway ${AppStrings.minuteShort}',
+                      '$minutesAway ${context.tr(AppStrings.minuteShort)}',
                       style: GoogleFonts.prompt(
                         color: AppColors.statusAmber,
                         fontWeight: FontWeight.w600,
@@ -138,36 +149,43 @@ class TeacherBusCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
               children: [
-                Icon(
-                  HugeIcons.strokeRoundedCreditCard,
-                  size: 14,
-                  color: AppColors.textSecondary,
+                _MetaChip(
+                  icon: HugeIcons.strokeRoundedClock01,
+                  label: _scheduledTime(),
                 ),
-                const SizedBox(width: 5),
-                Text(
-                  licensePlate,
-                  style: GoogleFonts.prompt(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+                _MetaChip(
+                  icon: HugeIcons.strokeRoundedCreditCard,
+                  label: bus?.licensePlate.isNotEmpty == true
+                      ? bus!.licensePlate
+                      : context.tr(AppStrings.unassignedBus),
                 ),
-                const SizedBox(width: 14),
-                Icon(
-                  HugeIcons.strokeRoundedUser02,
-                  size: 14,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${AppStrings.driverLabel} ${driver.name}',
-                  style: GoogleFonts.prompt(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+                _MetaChip(
+                  icon: HugeIcons.strokeRoundedUser02,
+                  label: driverName.isNotEmpty
+                      ? '${context.tr(AppStrings.driverLabel)} $driverName'
+                      : context.tr(AppStrings.unassignedDriver),
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                _getStatusText(context),
+                style: GoogleFonts.prompt(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -203,6 +221,31 @@ class TeacherBusCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MetaChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: AppColors.textSecondary),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: GoogleFonts.prompt(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }
