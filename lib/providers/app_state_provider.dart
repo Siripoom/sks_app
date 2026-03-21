@@ -71,21 +71,68 @@ class AppStateProvider extends ChangeNotifier {
     return locale.languageCode == 'en' ? const Locale('en') : const Locale('th');
   }
 
-  Future<void> updateCurrentUserProfilePhoto(
+  Future<bool> updateCurrentUserProfilePhoto(
     XFile? photo, {
     bool clear = false,
   }) async {
     if (_currentUser == null) {
-      return;
+      return false;
     }
 
-    final updated = await _authService.updateProfilePhoto(
-      _currentUser!,
-      photo: photo,
-      clear: clear,
-    );
-    _currentUser = updated;
+    _isBusy = true;
+    _errorMessage = null;
     notifyListeners();
+
+    try {
+      final updated = await _authService.updateProfilePhoto(
+        _currentUser!,
+        photo: photo,
+        clear: clear,
+      );
+      _currentUser = updated;
+      return true;
+    } on FirebaseException catch (error) {
+      _errorMessage = error.message ?? error.code;
+      return false;
+    } catch (error) {
+      _errorMessage = error.toString();
+      return false;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateCurrentUserProfile({
+    required String name,
+    required String phone,
+  }) async {
+    if (_currentUser == null) {
+      return false;
+    }
+
+    _isBusy = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updated = await _authService.updateProfile(
+        _currentUser!,
+        name: name,
+        phone: phone,
+      );
+      _currentUser = updated;
+      return true;
+    } on FirebaseException catch (error) {
+      _errorMessage = error.message ?? error.code;
+      return false;
+    } catch (error) {
+      _errorMessage = error.toString();
+      return false;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> login(String email, String password) async {

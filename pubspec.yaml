@@ -43,6 +43,9 @@ dependencies:
   # Maps
   google_maps_flutter: ^2.9.0
 
+  # Device location
+  geolocator: ^14.0.2
+
   # Local notifications
   flutter_local_notifications: ^18.0.0
 

@@ -7,6 +7,7 @@ import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/driver.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/screens/common/admin_support_screen.dart';
+import 'package:sks/screens/common/edit_profile_screen.dart';
 import 'package:sks/screens/login/login_screen.dart';
 import 'package:sks/services/notification_service.dart';
 import 'package:sks/services/reference_data_service.dart';
@@ -27,24 +28,54 @@ class _DriverDriversTabState extends State<DriverDriversTab> {
   final ImagePicker _imagePicker = ImagePicker();
 
   Future<void> _pickProfilePhoto() async {
+    final appState = context.read<AppStateProvider>();
+    if (appState.isBusy) return;
+
     final photo = await _imagePicker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 88,
       maxWidth: 1600,
     );
 
-    if (photo == null || !mounted) {
-      return;
-    }
+    if (photo == null || !mounted) return;
 
-    await context.read<AppStateProvider>().updateCurrentUserProfilePhoto(photo);
+    final success = await appState.updateCurrentUserProfilePhoto(photo);
+
+    if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            appState.errorMessage ??
+                context.tr(AppStrings.profilePhotoUploadFailed),
+          ),
+          backgroundColor: AppColors.statusRed,
+        ),
+      );
+    }
   }
 
   Future<void> _removeProfilePhoto() async {
-    await context.read<AppStateProvider>().updateCurrentUserProfilePhoto(
+    final appState = context.read<AppStateProvider>();
+    if (appState.isBusy) return;
+
+    final success = await appState.updateCurrentUserProfilePhoto(
       null,
       clear: true,
     );
+
+    if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            appState.errorMessage ??
+                context.tr(AppStrings.profilePhotoUploadFailed),
+          ),
+          backgroundColor: AppColors.statusRed,
+        ),
+      );
+    }
   }
 
   @override
@@ -111,7 +142,8 @@ class _DriverDriversTabState extends State<DriverDriversTab> {
                           runSpacing: 8,
                           children: [
                             ElevatedButton.icon(
-                              onPressed: _pickProfilePhoto,
+                              onPressed:
+                                  appState.isBusy ? null : _pickProfilePhoto,
                               icon: const Icon(Icons.photo_library_outlined),
                               label: Text(
                                 context.tr(AppStrings.changeProfilePhoto),
@@ -120,12 +152,33 @@ class _DriverDriversTabState extends State<DriverDriversTab> {
                             if ((currentUser?.profilePhotoPath ?? '')
                                 .isNotEmpty)
                               TextButton.icon(
-                                onPressed: _removeProfilePhoto,
+                                onPressed: appState.isBusy
+                                    ? null
+                                    : _removeProfilePhoto,
                                 icon: const Icon(Icons.delete_outline),
                                 label: Text(
                                   context.tr(AppStrings.removeProfilePhoto),
                                 ),
                               ),
+                            OutlinedButton.icon(
+                              onPressed: appState.isBusy
+                                  ? null
+                                  : () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => EditProfileScreen(
+                                            currentPhone:
+                                                currentDriver?.phone ?? '',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                              icon: const Icon(Icons.edit_outlined),
+                              label: Text(
+                                context.tr(AppStrings.editProfile),
+                              ),
+                            ),
                           ],
                         ),
                       ],

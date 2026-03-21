@@ -342,4 +342,80 @@ class AppStrings {
       'Unable to update student archive state.';
   static const String unableUpdateBusArchiveState =
       'Unable to update bus archive state.';
+
+  static const String locationPermissionDenied =
+      'กรุณาอนุญาตการเข้าถึงตำแหน่งเพื่อใช้งานฟีเจอร์นี้';
+  static const String locationServiceDisabled =
+      'กรุณาเปิด GPS เพื่อใช้งานตำแหน่งปัจจุบัน';
+  static const String useCurrentLocation = 'ใช้ตำแหน่งปัจจุบัน';
+
+  // Trip stops - Driver
+  static const String currentlyPickingUp = 'กำลังรับ';
+  static const String stopProgress = 'จุดที่ {current}/{total}';
+  static const String navigateToNextStop = 'นำทางไปจุดรับ';
+  static const String navigateToSchool = 'นำทางไปโรงเรียน';
+  static const String pickedUp = 'รับแล้ว';
+  static const String skipStop = 'ข้าม';
+  static const String allStopsCompleted = 'รับนักเรียนครบทุกจุดแล้ว';
+  static const String arrivedAtSchoolAction = 'ถึงโรงเรียนแล้ว';
+  static const String pickupStops = 'จุดรับ';
+
+  // Trip stops - Driver (toHome)
+  static const String currentlyDroppingOff = 'กำลังส่ง';
+  static const String navigateToDropOff = 'นำทางไปจุดส่ง';
+  static const String droppedOff = 'ส่งแล้ว';
+  static const String allStopsCompletedToHome = 'ส่งนักเรียนครบทุกจุดแล้ว';
+  static const String tripCompleteAction = 'เสร็จสิ้นการเดินทาง';
+  static const String dropOffStops = 'จุดส่ง';
+
+  // Trip stops - Parent tracking
+  static const String stopsBeforeYou = 'ก่อนถึงบ้านคุณ';
+  static const String stopsBeforeDropOff = 'ก่อนถึงจุดส่งลูกคุณ';
+  static const String stopsRemaining = 'อีก {count} จุด';
+  static const String etaApprox = 'เวลาโดยประมาณ';
+  static const String etaMinutes = '~{minutes} นาที';
+  static const String busApproachingEta = 'รถจะถึงใน ~{minutes} นาที';
+
+  // Trip stop statuses
+  static const String stopStatusPending = 'รอ';
+  static const String stopStatusApproaching = 'กำลังไป';
+  static const String stopStatusArrived = 'ถึงแล้ว';
+  static const String stopStatusPickedUp = 'รับแล้ว';
+  static const String stopStatusSkipped = 'ข้าม';
+  static const String waitingToPickup = 'รอขึ้นรถ';
+  static const String waitingToDropOff = 'รอลงรถ';
+  static const String busComingStatus = 'รถกำลังมา';
+  static const String droppedOffStatus = 'ลงรถแล้ว';
+  static const String skippedDropOff = 'ข้ามจุดส่ง';
+
+  // Notifications
+  static const String busStartedRouteNotif = 'รถเริ่มออกเดินทาง';
+  static const String busApproachingNotif = 'รถกำลังจะถึงจุดรับ';
+  static const String busApproachingDropOffNotif = 'รถกำลังจะถึงจุดส่ง';
+  static const String childNotAtStop = 'ไม่อยู่ที่จุดรับ';
+  static const String tripCompletedStatus = 'เดินทางเสร็จสิ้น';
+
+  // Admin - route ordering
+  static const String arrangePickupOrder = 'จัดลำดับจุดรับ';
+  static const String dragToReorder = 'ลากเพื่อจัดลำดับ';
+  static const String cannotEditActiveTrip = 'ไม่สามารถแก้ไขขณะกำลังเดินทาง';
+
+  // Parent home - schedule & tracking
+  static const String pickupLabel = 'รับ';
+  static const String dropOffLabel = 'ส่ง';
+  static const String scheduleTimeRange = 'รับ {pickup} น. - ส่ง {dropoff} น.';
+  static const String pickupTime = '{time} น.';
+  static const String pickupPointMarker = 'จุดรับ {name}';
+  static const String busOnTheWay = 'รถกำลังมา';
+  static const String busArrivingSoon = 'รถจะถึงใน ~{minutes} นาที';
+  static const String tripActiveTracking = 'แตะเพื่อติดตามแบบเรียลไทม์';
+  static const String stopsAway = 'อีก {count} จุด';
+
+  // Profile editing
+  static const String editProfile = 'แก้ไขโปรไฟล์';
+  static const String editProfileTitle = 'แก้ไขข้อมูลส่วนตัว';
+  static const String profileName = 'ชื่อ-นามสกุล';
+  static const String profileUpdatedSuccess = 'อัปเดตโปรไฟล์สำเร็จ';
+  static const String unableUpdateProfile = 'ไม่สามารถอัปเดตโปรไฟล์ได้';
+  static const String profilePhotoUploadFailed = 'อัปโหลดรูปโปรไฟล์ไม่สำเร็จ';
 }

@@ -114,12 +114,21 @@ class FirebaseChildService implements IChildService {
 
   @override
   Future<bool> addChild(Child child, {XFile? photo}) async {
-    final savedChild = await _persistPhotoIfNeeded(child, photo);
-    await _children.doc(savedChild.id).set(savedChild.toMap());
-    await _parents.doc(savedChild.parentId).set({
-      'childIds': FieldValue.arrayUnion([savedChild.id]),
-      'schoolIds': FieldValue.arrayUnion([savedChild.schoolId]),
+    // Save the child document first so that storage rules (ownsChild) can
+    // verify ownership via the Firestore lookup before the photo is uploaded.
+    await _children.doc(child.id).set(child.toMap());
+    await _parents.doc(child.parentId).set({
+      'childIds': FieldValue.arrayUnion([child.id]),
+      'schoolIds': FieldValue.arrayUnion([child.schoolId]),
     }, SetOptions(merge: true));
+
+    // Now that the child document exists, the storage rule can confirm
+    // parentId ownership and the upload will succeed.
+    final savedChild = await _persistPhotoIfNeeded(child, photo);
+    if (savedChild.photoUrl != child.photoUrl) {
+      await _children.doc(savedChild.id).update({'photoUrl': savedChild.photoUrl});
+    }
+
     await _syncParentSchoolIds(savedChild.parentId);
     return true;
   }

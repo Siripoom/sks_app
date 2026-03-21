@@ -192,6 +192,7 @@ class AdminTripInput {
     required this.round,
     this.scheduledStartAt,
     this.childIds = const [],
+    this.stops = const [],
   });
 
   final String? id;
@@ -201,6 +202,7 @@ class AdminTripInput {
   final TripRound round;
   final DateTime? scheduledStartAt;
   final List<String> childIds;
+  final List<Map<String, dynamic>> stops;
 
   Map<String, dynamic> toMap() {
     return {
@@ -211,6 +213,7 @@ class AdminTripInput {
       'round': round.value,
       'scheduledStartAt': scheduledStartAt,
       'childIds': childIds,
+      'stops': stops,
     };
   }
 }
@@ -435,12 +438,27 @@ class FirebaseAdminService implements IAdminService {
   Future<void> saveBus(AdminBusInput input) async {
     final busId = input.id ?? _generatePrefixedId('bus');
     await _firestore.runTransaction((tx) async {
+      // ---- ALL READS FIRST ----
       final busRef = _buses.doc(busId);
       final busSnap = await tx.get(busRef);
       final existing = busSnap.data() ?? const <String, dynamic>{};
       final previousDriverId = _asString(existing['driverId']);
       final nextDriverId = input.driverId.trim();
 
+      DocumentSnapshot<Map<String, dynamic>>? driverSnap;
+      if (nextDriverId.isNotEmpty) {
+        driverSnap = await tx.get(_drivers.doc(nextDriverId));
+      }
+
+      // ---- VALIDATE ----
+      if (nextDriverId.isNotEmpty) {
+        final driverData = driverSnap?.data();
+        if (driverSnap == null || !driverSnap.exists || _asBool(driverData?['isArchived'])) {
+          throw Exception('Assigned driver is unavailable.');
+        }
+      }
+
+      // ---- ALL WRITES ----
       if (previousDriverId.isNotEmpty && previousDriverId != nextDriverId) {
         tx.set(_drivers.doc(previousDriverId), {
           'busId': '',
@@ -448,13 +466,8 @@ class FirebaseAdminService implements IAdminService {
         }, SetOptions(merge: true));
       }
 
-      if (nextDriverId.isNotEmpty) {
-        final driverRef = _drivers.doc(nextDriverId);
-        final driverSnap = await tx.get(driverRef);
+      if (nextDriverId.isNotEmpty && driverSnap != null) {
         final driverData = driverSnap.data();
-        if (!driverSnap.exists || _asBool(driverData?['isArchived'])) {
-          throw Exception('Assigned driver is unavailable.');
-        }
         final driverBusId = _asString(driverData?['busId']);
         if (driverBusId.isNotEmpty && driverBusId != busId) {
           tx.set(_buses.doc(driverBusId), {
@@ -462,7 +475,7 @@ class FirebaseAdminService implements IAdminService {
             'updatedAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
         }
-        tx.set(driverRef, {
+        tx.set(_drivers.doc(nextDriverId), {
           'busId': busId,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
@@ -669,6 +682,7 @@ class FirebaseAdminService implements IAdminService {
     final touchedParentIds = <String>{};
 
     await _firestore.runTransaction((tx) async {
+      // ---- ALL READS FIRST ----
       final tripRef = _trips.doc(tripId);
       final tripSnap = await tx.get(tripRef);
       final existing = tripSnap.data() ?? const <String, dynamic>{};
@@ -677,6 +691,32 @@ class FirebaseAdminService implements IAdminService {
           .where((childId) => !childIds.contains(childId))
           .toList();
 
+      final removedChildSnaps = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+      for (final childId in removedChildIds) {
+        removedChildSnaps[childId] = await tx.get(_children.doc(childId));
+      }
+
+      final assignedChildSnaps = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+      for (final childId in childIds) {
+        assignedChildSnaps[childId] = await tx.get(_children.doc(childId));
+      }
+
+      // ---- VALIDATE ----
+      for (final childId in childIds) {
+        final childSnap = assignedChildSnaps[childId]!;
+        final childData = childSnap.data();
+        if (!childSnap.exists || childData == null) {
+          throw Exception('Selected child is unavailable.');
+        }
+        if (_asBool(childData['isArchived'])) {
+          throw Exception('Selected child is unavailable.');
+        }
+        if (_asString(childData['schoolId']) != schoolId) {
+          throw Exception('Child school does not match the trip school.');
+        }
+      }
+
+      // ---- ALL WRITES ----
       tx.set(tripRef, {
         'schoolId': schoolId,
         'busId': busId,
@@ -685,11 +725,15 @@ class FirebaseAdminService implements IAdminService {
         'round': input.round.value,
         'scheduledStartAt': input.scheduledStartAt,
         'childIds': childIds,
+        'stops': input.stops,
+        'currentStopIndex': existing['currentStopIndex'] ?? -1,
         'status': _asString(existing['status']).isEmpty
             ? TripStatus.draft.value
             : _asString(existing['status']),
         'isArchived': _asBool(existing['isArchived']),
         'archivedAt': existing['archivedAt'],
+        'startedAt': existing['startedAt'],
+        'completedAt': existing['completedAt'],
         'createdAt': tripSnap.exists
             ? existing['createdAt']
             : FieldValue.serverTimestamp(),
@@ -697,8 +741,7 @@ class FirebaseAdminService implements IAdminService {
       }, SetOptions(merge: true));
 
       for (final childId in removedChildIds) {
-        final childRef = _children.doc(childId);
-        final childSnap = await tx.get(childRef);
+        final childSnap = removedChildSnaps[childId]!;
         final childData = childSnap.data();
         if (!childSnap.exists || childData == null) {
           continue;
@@ -707,7 +750,7 @@ class FirebaseAdminService implements IAdminService {
         if (parentId.isNotEmpty) {
           touchedParentIds.add(parentId);
         }
-        tx.set(childRef, {
+        tx.set(_children.doc(childId), {
           'tripId': null,
           'busId': null,
           'busStopId': FieldValue.delete(),
@@ -719,23 +762,13 @@ class FirebaseAdminService implements IAdminService {
       }
 
       for (final childId in childIds) {
-        final childRef = _children.doc(childId);
-        final childSnap = await tx.get(childRef);
-        final childData = childSnap.data();
-        if (!childSnap.exists || childData == null) {
-          throw Exception('Selected child is unavailable.');
-        }
-        if (_asBool(childData['isArchived'])) {
-          throw Exception('Selected child is unavailable.');
-        }
-        if (_asString(childData['schoolId']) != schoolId) {
-          throw Exception('Child school does not match the trip school.');
-        }
+        final childSnap = assignedChildSnaps[childId]!;
+        final childData = childSnap.data()!;
         final parentId = _asString(childData['parentId']);
         if (parentId.isNotEmpty) {
           touchedParentIds.add(parentId);
         }
-        tx.set(childRef, {
+        tx.set(_children.doc(childId), {
           'tripId': tripId,
           'busId': busId,
           'busStopId': FieldValue.delete(),
@@ -759,6 +792,7 @@ class FirebaseAdminService implements IAdminService {
     final touchedParentIds = <String>{};
 
     await _firestore.runTransaction((tx) async {
+      // ---- ALL READS FIRST ----
       final tripRef = _trips.doc(tripId);
       final tripSnap = await tx.get(tripRef);
       final tripData = tripSnap.data();
@@ -766,19 +800,25 @@ class FirebaseAdminService implements IAdminService {
         throw Exception('Trip not found.');
       }
 
+      final childSnaps = <String, DocumentSnapshot<Map<String, dynamic>>>{};
       if (archived) {
         for (final childId in _asStringList(tripData['childIds'])) {
-          final childRef = _children.doc(childId);
-          final childSnap = await tx.get(childRef);
-          final childData = childSnap.data();
-          if (!childSnap.exists || childData == null) {
+          childSnaps[childId] = await tx.get(_children.doc(childId));
+        }
+      }
+
+      // ---- ALL WRITES ----
+      if (archived) {
+        for (final entry in childSnaps.entries) {
+          final childData = entry.value.data();
+          if (!entry.value.exists || childData == null) {
             continue;
           }
           final parentId = _asString(childData['parentId']);
           if (parentId.isNotEmpty) {
             touchedParentIds.add(parentId);
           }
-          tx.set(childRef, {
+          tx.set(_children.doc(entry.key), {
             'tripId': null,
             'busId': null,
             'busStopId': FieldValue.delete(),

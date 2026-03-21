@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sks/models/trip_stop.dart';
 
 enum TripRound { toSchool, toHome }
 
@@ -40,9 +41,13 @@ class Trip {
   final TripRound round;
   final DateTime? scheduledStartAt;
   final List<String> childIds;
+  final List<TripStop> stops;
+  final int currentStopIndex;
   final TripStatus status;
   final bool isArchived;
   final DateTime? archivedAt;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -54,9 +59,13 @@ class Trip {
     required this.round,
     this.scheduledStartAt,
     required this.childIds,
+    this.stops = const [],
+    this.currentStopIndex = -1,
     this.status = TripStatus.draft,
     this.isArchived = false,
     this.archivedAt,
+    this.startedAt,
+    this.completedAt,
     this.createdAt,
     this.updatedAt,
   });
@@ -75,9 +84,15 @@ class Trip {
     DateTime? scheduledStartAt,
     bool clearScheduledStartAt = false,
     List<String>? childIds,
+    List<TripStop>? stops,
+    int? currentStopIndex,
     TripStatus? status,
     bool? isArchived,
     DateTime? archivedAt,
+    DateTime? startedAt,
+    bool clearStartedAt = false,
+    DateTime? completedAt,
+    bool clearCompletedAt = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -91,9 +106,13 @@ class Trip {
           ? null
           : (scheduledStartAt ?? this.scheduledStartAt),
       childIds: childIds ?? this.childIds,
+      stops: stops ?? this.stops,
+      currentStopIndex: currentStopIndex ?? this.currentStopIndex,
       status: status ?? this.status,
       isArchived: isArchived ?? this.isArchived,
       archivedAt: archivedAt ?? this.archivedAt,
+      startedAt: clearStartedAt ? null : (startedAt ?? this.startedAt),
+      completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -107,9 +126,13 @@ class Trip {
       'round': round.value,
       'scheduledStartAt': scheduledStartAt,
       'childIds': childIds,
+      'stops': stops.map((s) => s.toMap()).toList(),
+      'currentStopIndex': currentStopIndex,
       'status': status.value,
       'isArchived': isArchived,
       'archivedAt': archivedAt,
+      'startedAt': startedAt,
+      'completedAt': completedAt,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -125,9 +148,15 @@ class Trip {
       round: TripRoundX.fromValue(map['round'] as String? ?? 'toSchool'),
       scheduledStartAt: _dateTimeFromMap(map['scheduledStartAt']),
       childIds: List<String>.from(map['childIds'] as List? ?? const []),
+      stops: (map['stops'] as List? ?? const [])
+          .map((s) => TripStop.fromMap(Map<String, dynamic>.from(s as Map)))
+          .toList(),
+      currentStopIndex: map['currentStopIndex'] as int? ?? -1,
       status: TripStatusX.fromValue(map['status'] as String? ?? 'draft'),
       isArchived: map['isArchived'] as bool? ?? false,
       archivedAt: _dateTimeFromMap(map['archivedAt']),
+      startedAt: _dateTimeFromMap(map['startedAt']),
+      completedAt: _dateTimeFromMap(map['completedAt']),
       createdAt: _dateTimeFromMap(map['createdAt']),
       updatedAt: _dateTimeFromMap(map['updatedAt']),
     );

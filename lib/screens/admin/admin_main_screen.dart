@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/bus.dart';
@@ -337,6 +338,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     PickupLocationResult? location = existing == null
         ? null
         : PickupLocationResult(lat: existing.lat, lng: existing.lng, label: existing.address);
+    bool saving = false;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -348,7 +350,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                 TextField(controller: name, decoration: const InputDecoration(labelText: 'Name')),
                 TextField(controller: address, decoration: const InputDecoration(labelText: 'Address')),
                 OutlinedButton.icon(
-                  onPressed: () async {
+                  onPressed: saving ? null : () async {
                     final picked = await Navigator.push<PickupLocationResult>(
                       context,
                       MaterialPageRoute(
@@ -376,11 +378,12 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
+            TextButton(onPressed: saving ? null : () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
             ElevatedButton(
-              onPressed: location == null
+              onPressed: location == null || saving
                   ? null
                   : () async {
+                      setModalState(() => saving = true);
                       final ok = await provider.saveSchool(
                         AdminSchoolInput(
                           id: existing?.id,
@@ -395,9 +398,15 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                         ),
                       );
                       if (!mounted) return;
-                      if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+                      if (ok && dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                      } else if (dialogContext.mounted) {
+                        setModalState(() => saving = false);
+                      }
                     },
-              child: Text(existing == null ? 'Create' : 'Save'),
+              child: saving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(existing == null ? 'Create' : 'Save'),
             ),
           ],
         ),
@@ -424,6 +433,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     final license = TextEditingController(text: existing is Driver ? existing.licenseNumber : '');
     String selectedBusId = existing is Driver ? existing.busId : '';
     String selectedSchoolId = existing is Teacher ? existing.schoolId : provider.selectedSchoolId;
+    bool saving = false;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -441,7 +451,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     value: selectedSchoolId.isEmpty ? null : selectedSchoolId,
                     decoration: const InputDecoration(labelText: 'School'),
                     items: provider.schools.where((school) => !school.isArchived).map((school) => DropdownMenuItem(value: school.id, child: Text(school.name))).toList(),
-                    onChanged: (value) => setModalState(() => selectedSchoolId = value ?? ''),
+                    onChanged: saving ? null : (value) => setModalState(() => selectedSchoolId = value ?? ''),
                   ),
                 if (type == AdminEntityType.driver)
                   TextField(controller: license, decoration: const InputDecoration(labelText: 'License number')),
@@ -453,7 +463,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                       const DropdownMenuItem(value: '', child: Text('No bus')),
                       ...provider.buses.where((bus) => !bus.isArchived).map((bus) => DropdownMenuItem(value: bus.id, child: Text(bus.busNumber))),
                     ],
-                    onChanged: (value) => setModalState(() => selectedBusId = value ?? ''),
+                    onChanged: saving ? null : (value) => setModalState(() => selectedBusId = value ?? ''),
                   ),
                 TextField(
                   controller: password,
@@ -464,9 +474,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
+            TextButton(onPressed: saving ? null : () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
             ElevatedButton(
-              onPressed: () async {
+              onPressed: saving ? null : () async {
+                setModalState(() => saving = true);
                 final input = AdminManagedUserInput(
                   type: type,
                   referenceId: existing is Parent ? existing.id : existing is Teacher ? existing.id : existing is Driver ? existing.id : null,
@@ -482,9 +493,15 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     ? await provider.createManagedUser(input)
                     : await provider.updateManagedUser(input);
                 if (!mounted) return;
-                if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+                if (ok && dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                } else if (dialogContext.mounted) {
+                  setModalState(() => saving = false);
+                }
               },
-              child: Text(existing == null ? 'Create' : 'Save'),
+              child: saving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(existing == null ? 'Create' : 'Save'),
             ),
           ],
         ),
@@ -507,6 +524,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             lng: existing.pickupLng ?? 100.5018,
             label: existing.pickupLabel,
           );
+    bool saving = false;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -519,20 +537,20 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   value: selectedParentId.isEmpty ? null : selectedParentId,
                   decoration: const InputDecoration(labelText: 'Parent'),
                   items: provider.parents.where((parent) => !parent.isArchived).map((parent) => DropdownMenuItem(value: parent.id, child: Text(parent.name))).toList(),
-                  onChanged: (value) => setModalState(() => selectedParentId = value ?? ''),
+                  onChanged: saving ? null : (value) => setModalState(() => selectedParentId = value ?? ''),
                 ),
                 DropdownButtonFormField<String>(
                   value: selectedSchoolId.isEmpty ? null : selectedSchoolId,
                   decoration: const InputDecoration(labelText: 'School'),
                   items: provider.schools.where((school) => !school.isArchived).map((school) => DropdownMenuItem(value: school.id, child: Text(school.name))).toList(),
-                  onChanged: (value) => setModalState(() => selectedSchoolId = value ?? ''),
+                  onChanged: saving ? null : (value) => setModalState(() => selectedSchoolId = value ?? ''),
                 ),
                 TextField(controller: name, decoration: const InputDecoration(labelText: 'Name')),
                 TextField(controller: grade, decoration: const InputDecoration(labelText: 'Grade')),
                 TextField(controller: emergencyName, decoration: const InputDecoration(labelText: 'Emergency contact')),
                 TextField(controller: emergencyPhone, decoration: const InputDecoration(labelText: 'Emergency phone')),
                 OutlinedButton.icon(
-                  onPressed: () async {
+                  onPressed: saving ? null : () async {
                     final picked = await Navigator.push<PickupLocationResult>(
                       context,
                       MaterialPageRoute(
@@ -551,11 +569,12 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
+            TextButton(onPressed: saving ? null : () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
             ElevatedButton(
-              onPressed: location == null
+              onPressed: location == null || saving
                   ? null
                   : () async {
+                      setModalState(() => saving = true);
                       final school = provider.schoolById(selectedSchoolId);
                       final ok = await provider.saveChild(
                         AdminChildInput(
@@ -575,9 +594,15 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                         ),
                       );
                       if (!mounted) return;
-                      if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+                      if (ok && dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                      } else if (dialogContext.mounted) {
+                        setModalState(() => saving = false);
+                      }
                     },
-              child: Text(existing == null ? 'Create' : 'Save'),
+              child: saving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(existing == null ? 'Create' : 'Save'),
             ),
           ],
         ),
@@ -590,6 +615,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     final busNumber = TextEditingController(text: existing?.busNumber ?? '');
     final plate = TextEditingController(text: existing?.licensePlate ?? '');
     String selectedDriverId = existing?.driverId ?? '';
+    bool saving = false;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -607,14 +633,15 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   const DropdownMenuItem(value: '', child: Text('No driver')),
                   ...provider.drivers.where((driver) => !driver.isArchived).map((driver) => DropdownMenuItem(value: driver.id, child: Text(driver.name))),
                 ],
-                onChanged: (value) => setModalState(() => selectedDriverId = value ?? ''),
+                onChanged: saving ? null : (value) => setModalState(() => selectedDriverId = value ?? ''),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
+            TextButton(onPressed: saving ? null : () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
             ElevatedButton(
-              onPressed: () async {
+              onPressed: saving ? null : () async {
+                setModalState(() => saving = true);
                 final ok = await provider.saveBus(
                   AdminBusInput(
                     id: existing?.id,
@@ -627,9 +654,15 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   ),
                 );
                 if (!mounted) return;
-                if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+                if (ok && dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                } else if (dialogContext.mounted) {
+                  setModalState(() => saving = false);
+                }
               },
-              child: Text(existing == null ? 'Create' : 'Save'),
+              child: saving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : Text(existing == null ? 'Create' : 'Save'),
             ),
           ],
         ),
@@ -639,6 +672,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
 
   Future<void> _showTripSheet({Trip? existing}) async {
     final provider = context.read<AdminProvider>();
+    final isActive = existing?.status == TripStatus.active;
     String selectedSchoolId = existing?.schoolId ?? provider.selectedSchoolId;
     String selectedBusId = existing?.busId ?? provider.buses.firstOrNull?.id ?? '';
     TripRound round = existing?.round ?? TripRound.toSchool;
@@ -647,89 +681,177 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
         ? TimeOfDay.now()
         : TimeOfDay.fromDateTime(existing!.scheduledStartAt!);
     final selectedChildIds = <String>{...?existing?.childIds};
+    // Ordered list for stop sequence (preserves existing stop order if available)
+    final orderedChildIds = <String>[
+      if (existing?.stops.isNotEmpty == true)
+        ...existing!.stops.map((s) => s.childId)
+      else
+        ...?existing?.childIds,
+    ];
+    bool saving = false;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) {
           final students = provider.children.where((child) => !child.isArchived && child.schoolId == selectedSchoolId).toList();
+          final studentsById = {for (final c in students) c.id: c};
+
+          // Keep orderedChildIds in sync with selectedChildIds
+          void syncOrder() {
+            orderedChildIds.removeWhere((id) => !selectedChildIds.contains(id));
+            for (final id in selectedChildIds) {
+              if (!orderedChildIds.contains(id)) orderedChildIds.add(id);
+            }
+          }
+
+          syncOrder();
+
           return AlertDialog(
             title: Text(existing == null ? 'Create trip' : 'Edit trip'),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedSchoolId.isEmpty ? null : selectedSchoolId,
-                    decoration: const InputDecoration(labelText: 'School'),
-                    items: provider.schools.where((school) => !school.isArchived).map((school) => DropdownMenuItem(value: school.id, child: Text(school.name))).toList(),
-                    onChanged: (value) {
-                      setModalState(() {
-                        selectedSchoolId = value ?? '';
-                        selectedChildIds.clear();
-                      });
-                    },
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedBusId.isEmpty ? null : selectedBusId,
-                    decoration: const InputDecoration(labelText: 'Bus'),
-                    items: provider.buses.where((bus) => !bus.isArchived).map((bus) => DropdownMenuItem(value: bus.id, child: Text(bus.busNumber))).toList(),
-                    onChanged: (value) => setModalState(() => selectedBusId = value ?? ''),
-                  ),
-                  DropdownButtonFormField<TripRound>(
-                    value: round,
-                    decoration: const InputDecoration(labelText: 'Round'),
-                    items: const [
-                      DropdownMenuItem(value: TripRound.toSchool, child: Text('To school')),
-                      DropdownMenuItem(value: TripRound.toHome, child: Text('To home')),
-                    ],
-                    onChanged: (value) => setModalState(() => round = value ?? TripRound.toSchool),
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('Date: ${serviceDate.toIso8601String().split('T').first}'),
-                    trailing: const Icon(Icons.calendar_today_outlined),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: serviceDate,
-                        firstDate: DateTime(2024),
-                        lastDate: DateTime(2100),
-                      );
-                      if (picked != null) setModalState(() => serviceDate = picked);
-                    },
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('Start time: ${selectedTime.format(context)}'),
-                    trailing: const Icon(Icons.schedule_outlined),
-                    onTap: () async {
-                      final picked = await showTimePicker(context: context, initialTime: selectedTime);
-                      if (picked != null) setModalState(() => selectedTime = picked);
-                    },
-                  ),
-                  ...students.map(
-                    (child) => CheckboxListTile(
-                      dense: true,
-                      value: selectedChildIds.contains(child.id),
-                      title: Text(child.name),
-                      subtitle: Text(child.pickupLabel),
-                      onChanged: (value) {
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isActive)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.statusAmber.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Trip is active — cannot edit students or order.',
+                          style: TextStyle(color: AppColors.statusAmber),
+                        ),
+                      ),
+                    DropdownButtonFormField<String>(
+                      value: selectedSchoolId.isEmpty ? null : selectedSchoolId,
+                      decoration: const InputDecoration(labelText: 'School'),
+                      items: provider.schools.where((school) => !school.isArchived).map((school) => DropdownMenuItem(value: school.id, child: Text(school.name))).toList(),
+                      onChanged: (saving || isActive) ? null : (value) {
                         setModalState(() {
-                          if (value == true) {
-                            selectedChildIds.add(child.id);
-                          } else {
-                            selectedChildIds.remove(child.id);
-                          }
+                          selectedSchoolId = value ?? '';
+                          selectedChildIds.clear();
+                          orderedChildIds.clear();
                         });
                       },
                     ),
-                  ),
-                ],
+                    DropdownButtonFormField<String>(
+                      value: selectedBusId.isEmpty ? null : selectedBusId,
+                      decoration: const InputDecoration(labelText: 'Bus'),
+                      items: provider.buses.where((bus) => !bus.isArchived).map((bus) => DropdownMenuItem(value: bus.id, child: Text(bus.busNumber))).toList(),
+                      onChanged: (saving || isActive) ? null : (value) => setModalState(() => selectedBusId = value ?? ''),
+                    ),
+                    DropdownButtonFormField<TripRound>(
+                      value: round,
+                      decoration: const InputDecoration(labelText: 'Round'),
+                      items: const [
+                        DropdownMenuItem(value: TripRound.toSchool, child: Text('To school')),
+                        DropdownMenuItem(value: TripRound.toHome, child: Text('To home')),
+                      ],
+                      onChanged: (saving || isActive) ? null : (value) => setModalState(() => round = value ?? TripRound.toSchool),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Date: ${serviceDate.toIso8601String().split('T').first}'),
+                      trailing: const Icon(Icons.calendar_today_outlined),
+                      onTap: saving ? null : () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: serviceDate,
+                          firstDate: DateTime(2024),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) setModalState(() => serviceDate = picked);
+                      },
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Start time: ${selectedTime.format(context)}'),
+                      trailing: const Icon(Icons.schedule_outlined),
+                      onTap: saving ? null : () async {
+                        final picked = await showTimePicker(context: context, initialTime: selectedTime);
+                        if (picked != null) setModalState(() => selectedTime = picked);
+                      },
+                    ),
+                    if (!isActive)
+                      ...students.map(
+                        (child) => CheckboxListTile(
+                          dense: true,
+                          value: selectedChildIds.contains(child.id),
+                          title: Text(child.name),
+                          subtitle: Text(child.pickupLabel),
+                          onChanged: saving ? null : (value) {
+                            setModalState(() {
+                              if (value == true) {
+                                selectedChildIds.add(child.id);
+                              } else {
+                                selectedChildIds.remove(child.id);
+                              }
+                              syncOrder();
+                            });
+                          },
+                        ),
+                      ),
+                    // Reorderable pickup order
+                    if (orderedChildIds.isNotEmpty && !isActive) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'จัดลำดับจุดรับ (ลากเพื่อจัดลำดับ)',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: orderedChildIds.length * 56.0,
+                        child: ReorderableListView.builder(
+                          shrinkWrap: true,
+                          itemCount: orderedChildIds.length,
+                          onReorder: (oldIndex, newIndex) {
+                            setModalState(() {
+                              if (newIndex > oldIndex) newIndex--;
+                              final item = orderedChildIds.removeAt(oldIndex);
+                              orderedChildIds.insert(newIndex, item);
+                            });
+                          },
+                          itemBuilder: (context, index) {
+                            final childId = orderedChildIds[index];
+                            final child = studentsById[childId];
+                            return ListTile(
+                              key: ValueKey(childId),
+                              dense: true,
+                              leading: CircleAvatar(
+                                radius: 14,
+                                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                                child: Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              title: Text(child?.name ?? childId),
+                              subtitle: Text(child?.pickupLabel ?? ''),
+                              trailing: const Icon(Icons.drag_handle),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
+              TextButton(onPressed: saving ? null : () => Navigator.pop(dialogContext), child: Text(context.tr(AppStrings.cancel))),
               ElevatedButton(
-                onPressed: () async {
+                onPressed: saving ? null : () async {
+                  setModalState(() => saving = true);
                   final scheduledStartAt = DateTime(
                     serviceDate.year,
                     serviceDate.month,
@@ -737,6 +859,23 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     selectedTime.hour,
                     selectedTime.minute,
                   );
+                  // Build stops from ordered list
+                  final stops = <Map<String, dynamic>>[];
+                  for (var i = 0; i < orderedChildIds.length; i++) {
+                    final child = studentsById[orderedChildIds[i]];
+                    if (child == null) continue;
+                    stops.add({
+                      'childId': child.id,
+                      'sequence': i,
+                      'lat': child.pickupLat ?? 0,
+                      'lng': child.pickupLng ?? 0,
+                      'pickupLabel': child.pickupLabel,
+                      'childName': child.name,
+                      'status': 'pending',
+                      'arrivedAt': null,
+                      'pickedUpAt': null,
+                    });
+                  }
                   final ok = await provider.saveTrip(
                     AdminTripInput(
                       id: existing?.id,
@@ -745,13 +884,20 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                       serviceDate: serviceDate,
                       round: round,
                       scheduledStartAt: scheduledStartAt,
-                      childIds: selectedChildIds.toList(),
+                      childIds: orderedChildIds.toList(),
+                      stops: stops,
                     ),
                   );
                   if (!mounted) return;
-                  if (ok && dialogContext.mounted) Navigator.pop(dialogContext);
+                  if (ok && dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  } else if (dialogContext.mounted) {
+                    setModalState(() => saving = false);
+                  }
                 },
-                child: Text(existing == null ? 'Create' : 'Save'),
+                child: saving
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(existing == null ? 'Create' : 'Save'),
               ),
             ],
           );

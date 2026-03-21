@@ -44,7 +44,7 @@ export const pushNotificationOnCreate = onDocumentCreated(
   },
 );
 
-export const manageUser = onCall({ region: REGION }, async (request) => {
+export const manageUser = onCall({ region: REGION, enforceAppCheck: false }, async (request) => {
   await assertAdmin(request);
   const { action, role } = request.data ?? {};
   if (!action || !role) throw new HttpsError('invalid-argument', 'Missing action or role.');
@@ -55,7 +55,7 @@ export const manageUser = onCall({ region: REGION }, async (request) => {
   throw new HttpsError('invalid-argument', `Unsupported action ${action}.`);
 });
 
-export const manageSchool = onCall({ region: REGION }, async (request) => {
+export const manageSchool = onCall({ region: REGION, enforceAppCheck: false }, async (request) => {
   await assertAdmin(request);
   const { action } = request.data ?? {};
   if (action === 'create' || action === 'update') return saveSchool(request.data);
@@ -64,7 +64,7 @@ export const manageSchool = onCall({ region: REGION }, async (request) => {
   throw new HttpsError('invalid-argument', 'Unsupported school action.');
 });
 
-export const manageBus = onCall({ region: REGION }, async (request) => {
+export const manageBus = onCall({ region: REGION, enforceAppCheck: false }, async (request) => {
   await assertAdmin(request);
   const { action } = request.data ?? {};
   if (action === 'create' || action === 'update') return saveBus(request.data);
@@ -73,7 +73,7 @@ export const manageBus = onCall({ region: REGION }, async (request) => {
   throw new HttpsError('invalid-argument', 'Unsupported bus action.');
 });
 
-export const manageChild = onCall({ region: REGION }, async (request) => {
+export const manageChild = onCall({ region: REGION, enforceAppCheck: false }, async (request) => {
   await assertAdmin(request);
   const { action } = request.data ?? {};
   if (action === 'create' || action === 'update') return saveChild(request.data);
@@ -82,7 +82,7 @@ export const manageChild = onCall({ region: REGION }, async (request) => {
   throw new HttpsError('invalid-argument', 'Unsupported child action.');
 });
 
-export const manageTrip = onCall({ region: REGION }, async (request) => {
+export const manageTrip = onCall({ region: REGION, enforceAppCheck: false }, async (request) => {
   await assertAdmin(request);
   const { action } = request.data ?? {};
   if (action === 'create' || action === 'update') return saveTrip(request.data);
@@ -92,7 +92,7 @@ export const manageTrip = onCall({ region: REGION }, async (request) => {
   throw new HttpsError('invalid-argument', 'Unsupported trip action.');
 });
 
-export const assignChildToTrip = onCall({ region: REGION }, async (request) => {
+export const assignChildToTrip = onCall({ region: REGION, enforceAppCheck: false }, async (request) => {
   await assertAdmin(request);
   const { childId, tripId } = request.data ?? {};
   if (!childId || !tripId) throw new HttpsError('invalid-argument', 'Missing childId or tripId.');
@@ -100,7 +100,7 @@ export const assignChildToTrip = onCall({ region: REGION }, async (request) => {
   return { ok: true };
 });
 
-export const removeChildFromTrip = onCall({ region: REGION }, async (request) => {
+export const removeChildFromTrip = onCall({ region: REGION, enforceAppCheck: false }, async (request) => {
   await assertAdmin(request);
   const { childId } = request.data ?? {};
   if (!childId) throw new HttpsError('invalid-argument', 'Missing childId.');
@@ -737,6 +737,9 @@ async function resolveTargetAppUserIds(payload) {
 function buildTitle(payload) {
   if (payload.type === 'arrived') return 'SmartKids Arrival';
   if (payload.type === 'boarded') return 'SmartKids Boarding';
+  if (payload.type === 'trip_started') return 'SmartKids - รถออกเดินทาง';
+  if (payload.type === 'bus_approaching') return 'SmartKids - รถใกล้ถึง';
+  if (payload.type === 'child_skipped') return 'SmartKids - ข้ามจุดรับ';
   if (payload.type === 'message') return payload.sender || 'SmartKids Message';
   return 'SmartKids Notification';
 }

@@ -20,6 +20,11 @@ abstract class IAuthService {
     XFile? photo,
     bool clear = false,
   });
+  Future<AppUser> updateProfile(
+    AppUser user, {
+    required String name,
+    required String phone,
+  });
   Future<void> signOut();
 }
 
@@ -32,6 +37,9 @@ class FirebaseAuthService implements IAuthService {
 
   CollectionReference<Map<String, dynamic>> get _appUsers =>
       _firestore.collection('app_users');
+
+  CollectionReference<Map<String, dynamic>> get _drivers =>
+      _firestore.collection('drivers');
 
   CollectionReference<Map<String, dynamic>> get _parents =>
       _firestore.collection('parents');
@@ -124,6 +132,26 @@ class FirebaseAuthService implements IAuthService {
     final updated = user.copyWith(profilePhotoPath: nextPath);
     await _appUsers.doc(user.id).update({'profilePhotoPath': nextPath});
     return updated;
+  }
+
+  @override
+  Future<AppUser> updateProfile(
+    AppUser user, {
+    required String name,
+    required String phone,
+  }) async {
+    final batch = _firestore.batch();
+    batch.update(_appUsers.doc(user.id), {'name': name});
+
+    final referenceId = user.referenceId;
+    if (user.role == UserRole.parent) {
+      batch.update(_parents.doc(referenceId), {'name': name, 'phone': phone});
+    } else if (user.role == UserRole.driver) {
+      batch.update(_drivers.doc(referenceId), {'name': name, 'phone': phone});
+    }
+
+    await batch.commit();
+    return user.copyWith(name: name);
   }
 
   @override

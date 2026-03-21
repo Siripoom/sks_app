@@ -4,13 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
-import 'package:sks/models/bus.dart';
 import 'package:sks/models/child.dart';
 import 'package:sks/models/school.dart';
-import 'package:sks/models/trip.dart';
 import 'package:sks/providers/bus_provider.dart';
 import 'package:sks/providers/parent_provider.dart';
 import 'package:sks/providers/trip_provider.dart';
+import 'package:sks/screens/parent/parent_schedule_logic.dart';
 import 'package:sks/services/reference_data_service.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/child_avatar.dart';
@@ -74,9 +73,7 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
           for (final school in schoolSnapshot.data ?? const <School>[])
             school.id: school,
         };
-        final busesById = {
-          for (final bus in busProvider.buses) bus.id: bus,
-        };
+        final busesById = {for (final bus in busProvider.buses) bus.id: bus};
 
         return SingleChildScrollView(
           key: const PageStorageKey('parent-schedule-scroll'),
@@ -157,17 +154,27 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
                 ),
               ),
               const SizedBox(height: 10),
-              ...children.map(
-                (child) => _buildScheduleCard(
+              ...children.map((child) {
+                final dayTrips = tripProvider.tripsForChildOnDate(
+                  child.id,
+                  _selectedDate,
+                );
+                final busId = dayTrips.primaryTrip?.busId;
+                final bus = busId == null || busId.isEmpty
+                    ? null
+                    : busesById[busId];
+
+                return _buildScheduleCard(
                   context,
                   child: child,
-                  trip: tripProvider.getTripById(child.tripId),
-                  school: schoolsById[child.schoolId],
-                  bus: busesById[
-                    tripProvider.getTripById(child.tripId)?.busId ?? child.busId
-                  ],
-                ),
-              ),
+                  presentation: buildParentSchedulePresentation(
+                    child: child,
+                    school: schoolsById[child.schoolId],
+                    bus: bus,
+                    dayTrips: dayTrips,
+                  ),
+                );
+              }),
               const SizedBox(height: 90),
             ],
           ),
@@ -179,15 +186,9 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
   Widget _buildScheduleCard(
     BuildContext context, {
     required Child child,
-    required Trip? trip,
-    required School? school,
-    required Bus? bus,
+    required ParentSchedulePresentation presentation,
   }) {
-    final schedule = _resolveSchedule(
-      date: _selectedDate,
-      school: school,
-      trip: trip,
-    );
+    final statusChip = _buildStatusChip(context, presentation.status);
 
     return AppSurfaceCard(
       inner: true,
@@ -214,7 +215,7 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
                     Text(child.name),
                     Text(
                       child.isAssigned
-                          ? '${school?.name ?? child.schoolName} - ${bus?.busNumber ?? context.tr(AppStrings.notAssigned)}'
+                          ? '${presentation.schoolName} - ${presentation.busNumber ?? context.tr(AppStrings.notAssigned)}'
                           : context.tr(AppStrings.waitingForRoute),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
@@ -227,19 +228,13 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: schedule.hasService
-                      ? AppColors.statusGreen.withValues(alpha: 0.1)
-                      : AppColors.surfaceSoft,
+                  color: statusChip.backgroundColor,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  schedule.hasService
-                      ? 'มีรถรับส่ง'
-                      : context.tr(AppStrings.noServiceToday),
+                  statusChip.label,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: schedule.hasService
-                        ? AppColors.statusGreen
-                        : AppColors.textSecondary,
+                    color: statusChip.foregroundColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -249,32 +244,38 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
           const SizedBox(height: 14),
           const Divider(color: AppColors.divider, height: 1),
           const SizedBox(height: 14),
-          if (!child.isAssigned) ...[
+          if (presentation.status == ParentScheduleStatus.waitingForRoute) ...[
             Text(
-              '${context.tr(AppStrings.pickupLocation)}: ${child.pickupLabel}',
+              '${context.tr(AppStrings.pickupLocation)}: ${presentation.pickupLabel}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-          ] else if (!schedule.hasService) ...[
+          ] else if (!presentation.hasService) ...[
             Text(
               context.tr(AppStrings.noServiceToday),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ] else ...[
-            _buildScheduleRow(
-              context,
-              icon: HugeIcons.strokeRoundedSun01,
-              iconColor: AppColors.statusAmber,
-              label: context.tr(AppStrings.morningRound),
-              time: schedule.morningPickup,
-            ),
-            const SizedBox(height: 10),
-            _buildScheduleRow(
-              context,
-              icon: HugeIcons.strokeRoundedMoon01,
-              iconColor: AppColors.accentBlue,
-              label: context.tr(AppStrings.afternoonRound),
-              time: schedule.eveningPickup,
-            ),
+            if (presentation.morningPickup != null) ...[
+              _buildScheduleRow(
+                context,
+                icon: HugeIcons.strokeRoundedSun01,
+                iconColor: AppColors.statusAmber,
+                label: context.tr(AppStrings.morningRound),
+                time: presentation.morningPickup!,
+              ),
+            ],
+            if (presentation.morningPickup != null &&
+                presentation.eveningPickup != null)
+              const SizedBox(height: 10),
+            if (presentation.eveningPickup != null) ...[
+              _buildScheduleRow(
+                context,
+                icon: HugeIcons.strokeRoundedMoon01,
+                iconColor: AppColors.accentBlue,
+                label: context.tr(AppStrings.afternoonRound),
+                time: presentation.eveningPickup!,
+              ),
+            ],
           ],
         ],
       ),
@@ -299,36 +300,27 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
     );
   }
 
-  _ResolvedSchedule _resolveSchedule({
-    required DateTime date,
-    required School? school,
-    required Trip? trip,
-  }) {
-    final sameDay = _isSameDay(trip?.serviceDate, date);
-    final weekdayHasService =
-        date.weekday != DateTime.saturday && date.weekday != DateTime.sunday;
-
-    var morningPickup = school?.morningPickup.isNotEmpty == true
-        ? school!.morningPickup
-        : '--:--';
-    var eveningPickup = school?.eveningPickup.isNotEmpty == true
-        ? school!.eveningPickup
-        : '--:--';
-
-    if (sameDay && trip?.scheduledStartAt != null) {
-      final time = _formatTime(trip!.scheduledStartAt!);
-      if (trip.round == TripRound.toSchool) {
-        morningPickup = time;
-      } else {
-        eveningPickup = time;
-      }
-    }
-
-    return _ResolvedSchedule(
-      hasService: sameDay || weekdayHasService,
-      morningPickup: morningPickup,
-      eveningPickup: eveningPickup,
-    );
+  _ScheduleStatusChip _buildStatusChip(
+    BuildContext context,
+    ParentScheduleStatus status,
+  ) {
+    return switch (status) {
+      ParentScheduleStatus.waitingForRoute => _ScheduleStatusChip(
+        label: context.tr(AppStrings.waitingForRoute),
+        backgroundColor: AppColors.surfaceSoft,
+        foregroundColor: AppColors.textSecondary,
+      ),
+      ParentScheduleStatus.hasService => _ScheduleStatusChip(
+        label: 'มีรถรับส่ง',
+        backgroundColor: AppColors.statusGreen.withValues(alpha: 0.1),
+        foregroundColor: AppColors.statusGreen,
+      ),
+      ParentScheduleStatus.noServiceToday => _ScheduleStatusChip(
+        label: context.tr(AppStrings.noServiceToday),
+        backgroundColor: AppColors.surfaceSoft,
+        foregroundColor: AppColors.textSecondary,
+      ),
+    };
   }
 
   DateTime _dateOnly(DateTime value) {
@@ -342,21 +334,6 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
         value.day == today.day;
   }
 
-  bool _isSameDay(DateTime? left, DateTime right) {
-    if (left == null) {
-      return false;
-    }
-    return left.year == right.year &&
-        left.month == right.month &&
-        left.day == right.day;
-  }
-
-  String _formatTime(DateTime value) {
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
   String _formatDate(DateTime value, BuildContext context) {
     if (context.l10n.isEnglish) {
       return '${value.day}/${value.month}/${value.year}';
@@ -367,14 +344,14 @@ class _ParentScheduleTabState extends State<ParentScheduleTab> {
   }
 }
 
-class _ResolvedSchedule {
-  final bool hasService;
-  final String morningPickup;
-  final String eveningPickup;
+class _ScheduleStatusChip {
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
 
-  const _ResolvedSchedule({
-    required this.hasService,
-    required this.morningPickup,
-    required this.eveningPickup,
+  const _ScheduleStatusChip({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
   });
 }

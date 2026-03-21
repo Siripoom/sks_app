@@ -54,7 +54,7 @@ service cloud.firestore {
 
     match /app_users/{uid} {
       allow read: if signedIn() && (uid == request.auth.uid || isAdmin());
-      allow create: if isAdmin();
+      allow create: if true;
       allow update: if isAdmin() || uid == request.auth.uid;
       allow delete: if isAdmin();
 
@@ -85,7 +85,7 @@ service cloud.firestore {
 
     match /parents/{docId} {
       allow read: if signedIn();
-      allow create: if isAdmin();
+      allow create: if true;
       allow update: if isAdmin() || (isParentFor(docId) && sameArchiveState());
       allow delete: if isAdmin();
     }

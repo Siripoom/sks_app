@@ -223,6 +223,21 @@ class AppLocalizations {
     AppStrings.supportHint: 'Describe what you need help with',
     AppStrings.subjectHint: 'Enter a short subject',
     AppStrings.selectIssueType: 'Select issue type',
+    AppStrings.editProfile: 'Edit profile',
+    AppStrings.editProfileTitle: 'Edit personal information',
+    AppStrings.profileName: 'Full name',
+    AppStrings.profileUpdatedSuccess: 'Profile updated successfully',
+    AppStrings.unableUpdateProfile: 'Unable to update profile',
+    AppStrings.profilePhotoUploadFailed: 'Profile photo upload failed',
+    AppStrings.pickupLabel: 'Pickup',
+    AppStrings.dropOffLabel: 'Drop off',
+    AppStrings.scheduleTimeRange: 'Pickup {pickup} - Drop off {dropoff}',
+    AppStrings.pickupTime: '{time}',
+    AppStrings.pickupPointMarker: 'Pickup {name}',
+    AppStrings.busOnTheWay: 'Bus on the way',
+    AppStrings.busArrivingSoon: 'Bus arriving in ~{minutes} min',
+    AppStrings.tripActiveTracking: 'Tap to track in real-time',
+    AppStrings.stopsAway: '{count} stops away',
   };
 
   static final Map<String, String> _thai = {

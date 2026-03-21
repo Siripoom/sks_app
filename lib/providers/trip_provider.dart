@@ -46,8 +46,44 @@ class TripProvider extends ChangeNotifier {
     }
   }
 
+  ChildTripsForDate tripsForChildOnDate(String childId, DateTime date) {
+    if (childId.trim().isEmpty) {
+      return const ChildTripsForDate();
+    }
+
+    final sameDayTrips = _trips.where((trip) {
+      return trip.childIds.contains(childId) &&
+          _isSameDay(trip.serviceDate, date);
+    }).toList();
+
+    return ChildTripsForDate(
+      morningTrip: _preferredTripForRound(sameDayTrips, TripRound.toSchool),
+      afternoonTrip: _preferredTripForRound(sameDayTrips, TripRound.toHome),
+    );
+  }
+
   List<Trip> tripsForBus(String busId) {
     return _trips.where((trip) => trip.busId == busId).toList();
+  }
+
+  Trip? _preferredTripForRound(List<Trip> trips, TripRound round) {
+    final candidates = trips.where((trip) => trip.round == round).toList();
+    if (candidates.isEmpty) {
+      return null;
+    }
+
+    candidates.sort((left, right) {
+      final leftTime = left.scheduledStartAt ?? left.serviceDate;
+      final rightTime = right.scheduledStartAt ?? right.serviceDate;
+      return leftTime.compareTo(rightTime);
+    });
+    return candidates.first;
+  }
+
+  bool _isSameDay(DateTime left, DateTime right) {
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
   }
 
   Future<void> refresh() async {
@@ -63,4 +99,15 @@ class TripProvider extends ChangeNotifier {
     _tripSubscription?.cancel();
     super.dispose();
   }
+}
+
+class ChildTripsForDate {
+  final Trip? morningTrip;
+  final Trip? afternoonTrip;
+
+  const ChildTripsForDate({this.morningTrip, this.afternoonTrip});
+
+  bool get hasService => morningTrip != null || afternoonTrip != null;
+
+  Trip? get primaryTrip => morningTrip ?? afternoonTrip;
 }

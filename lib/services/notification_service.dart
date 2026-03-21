@@ -30,6 +30,22 @@ abstract class INotificationService implements Listenable {
     required Bus bus,
     required Trip trip,
   });
+  Future<void> sendTripStartedNotification({
+    required Trip trip,
+    required Bus bus,
+    required List<Child> children,
+  });
+  Future<void> sendApproachingNotification({
+    required Child child,
+    required Bus bus,
+    required Trip trip,
+    required int minutesAway,
+  });
+  Future<void> sendChildSkippedNotification({
+    required Child child,
+    required Bus bus,
+    required Trip trip,
+  });
 }
 
 class FirebaseNotificationService extends ChangeNotifier
@@ -149,9 +165,13 @@ class FirebaseNotificationService extends ChangeNotifier
   }) async {
     final now = DateTime.now();
     final time = _timeLabel(now);
-    final parentMessage = '${child.name} ถึงโรงเรียนแล้ว (${bus.busNumber})';
-    final teacherMessage =
-        '${child.name} มาถึงโรงเรียนด้วยรถ ${bus.busNumber} แล้ว';
+    final isToHome = trip.round == TripRound.toHome;
+    final parentMessage = isToHome
+        ? '${child.name} ถึงบ้านแล้ว (${bus.busNumber})'
+        : '${child.name} ถึงโรงเรียนแล้ว (${bus.busNumber})';
+    final teacherMessage = isToHome
+        ? '${child.name} ถึงบ้านแล้วด้วยรถ ${bus.busNumber}'
+        : '${child.name} มาถึงโรงเรียนด้วยรถ ${bus.busNumber} แล้ว';
 
     await Future.wait([
       _createRecord(
@@ -182,8 +202,12 @@ class FirebaseNotificationService extends ChangeNotifier
     ]);
 
     await _showLocalNotification(
-      title: '${child.name} ถึงโรงเรียนแล้ว',
-      body: 'รถ ${bus.busNumber} ถึงโรงเรียนเวลา $time',
+      title: isToHome
+          ? '${child.name} ถึงบ้านแล้ว'
+          : '${child.name} ถึงโรงเรียนแล้ว',
+      body: isToHome
+          ? 'รถ ${bus.busNumber} ส่งถึงบ้านเวลา $time'
+          : 'รถ ${bus.busNumber} ถึงโรงเรียนเวลา $time',
     );
     notifyListeners();
   }
@@ -196,8 +220,13 @@ class FirebaseNotificationService extends ChangeNotifier
   }) async {
     final now = DateTime.now();
     final time = _timeLabel(now);
-    final parentMessage = '${child.name} ขึ้นรถแล้ว';
-    final teacherMessage = '${child.name} เช็กอินขึ้นรถ ${bus.busNumber} แล้ว';
+    final isToHome = trip.round == TripRound.toHome;
+    final parentMessage = isToHome
+        ? '${child.name} ลงรถแล้ว (ถึงบ้านแล้ว)'
+        : '${child.name} ขึ้นรถแล้ว';
+    final teacherMessage = isToHome
+        ? '${child.name} ลงรถ ${bus.busNumber} แล้ว (ส่งถึงบ้าน)'
+        : '${child.name} เช็กอินขึ้นรถ ${bus.busNumber} แล้ว';
 
     await Future.wait([
       _createRecord(
@@ -228,8 +257,116 @@ class FirebaseNotificationService extends ChangeNotifier
     ]);
 
     await _showLocalNotification(
-      title: '${child.name} ขึ้นรถแล้ว',
+      title: isToHome
+          ? '${child.name} ลงรถแล้ว'
+          : '${child.name} ขึ้นรถแล้ว',
       body: 'เวลา $time',
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<void> sendTripStartedNotification({
+    required Trip trip,
+    required Bus bus,
+    required List<Child> children,
+  }) async {
+    final now = DateTime.now();
+    final time = _timeLabel(now);
+
+    final futures = <Future<void>>[];
+    for (final child in children) {
+      futures.add(
+        _createRecord(
+          AppNotificationRecord(
+            id: '',
+            type: 'trip_started',
+            message: 'รถสาย ${bus.busNumber} เริ่มออกเดินทางแล้ว',
+            sender: 'ระบบ',
+            createdAt: now,
+            time: time,
+            targetParentId: child.parentId,
+            targetRole: 'parent',
+            schoolId: trip.schoolId,
+          ),
+        ),
+      );
+    }
+    await Future.wait(futures);
+
+    await _showLocalNotification(
+      title: 'รถออกเดินทาง',
+      body: 'รถสาย ${bus.busNumber} เริ่มออกเดินทางเวลา $time',
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<void> sendApproachingNotification({
+    required Child child,
+    required Bus bus,
+    required Trip trip,
+    required int minutesAway,
+  }) async {
+    final now = DateTime.now();
+    final time = _timeLabel(now);
+
+    final isToHome = trip.round == TripRound.toHome;
+    final stopLabel = isToHome ? 'จุดส่ง' : 'จุดรับ';
+
+    await _createRecord(
+      AppNotificationRecord(
+        id: '',
+        type: 'bus_approaching',
+        message: 'รถสาย ${bus.busNumber} กำลังจะถึง$stopLabel ${child.name} ใน ~$minutesAway นาที',
+        sender: 'ระบบ',
+        createdAt: now,
+        time: time,
+        targetParentId: child.parentId,
+        targetRole: 'parent',
+        schoolId: trip.schoolId,
+      ),
+    );
+
+    await _showLocalNotification(
+      title: 'รถใกล้ถึงแล้ว',
+      body: 'รถสาย ${bus.busNumber} จะถึง$stopLabel ${child.name} ใน ~$minutesAway นาที',
+    );
+    notifyListeners();
+  }
+
+  @override
+  Future<void> sendChildSkippedNotification({
+    required Child child,
+    required Bus bus,
+    required Trip trip,
+  }) async {
+    final now = DateTime.now();
+    final time = _timeLabel(now);
+
+    final isToHome = trip.round == TripRound.toHome;
+
+    await _createRecord(
+      AppNotificationRecord(
+        id: '',
+        type: 'child_skipped',
+        message: isToHome
+            ? '${child.name} ข้ามจุดส่ง รถสาย ${bus.busNumber} ข้ามจุดนี้'
+            : '${child.name} ไม่อยู่ที่จุดรับ รถสาย ${bus.busNumber} ข้ามจุดนี้',
+        sender: 'ระบบ',
+        createdAt: now,
+        time: time,
+        targetParentId: child.parentId,
+        targetRole: 'parent',
+        schoolId: trip.schoolId,
+      ),
+    );
+
+    await _showLocalNotification(
+      title: isToHome ? 'ข้ามจุดส่ง' : 'ข้ามจุดรับ',
+      body: isToHome
+          ? '${child.name} ข้ามจุดส่ง'
+          : '${child.name} ไม่อยู่ที่จุดรับ',
     );
     notifyListeners();
   }

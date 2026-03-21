@@ -59,9 +59,25 @@ firebase deploy --only functions
 ## Runtime notes
 
 - Flutter debug builds use the App Check debug provider on Android and iOS.
+- Local Android `profile` and `release` runs use `Play Integrity` unless you pass `--dart-define=USE_DEBUG_APP_CHECK=true`.
 - Flutter profile/release builds use `Play Integrity` on Android and `App Attest` with `DeviceCheck` fallback on iOS.
 - iOS App Attest requires the `Runner` target entitlement to stay set to `production`.
 - Android release currently signs with the debug signing config in `android/app/build.gradle.kts`; switch to a real release keystore and register its SHA-256 before enabling enforcement for production users.
 - If Firebase Console enforcement is enabled before the updated client is deployed and registered, calls to `Cloud Functions`, `Cloud Firestore`, or `Cloud Storage` can be rejected.
 - School, bus, child, and trip edits continue to use the direct Firestore workaround in the admin flow.
 - Managed user actions such as creating or updating parent/teacher/driver/admin accounts still use Cloud Functions.
+
+## Android App Check troubleshooting
+
+- A `403 App attestation failed` response on Android usually means the app is using `Play Integrity` but Firebase App Check does not have the correct SHA-256 for the signing key used by the installed APK/AAB.
+- For local testing with a non-debug build, you can temporarily force the debug provider:
+
+```bash
+flutter run --profile --dart-define=USE_DEBUG_APP_CHECK=true
+```
+
+- If you want to keep testing `Play Integrity`, print the signing fingerprint and add its SHA-256 to the Android app in Firebase Console:
+
+```bash
+keytool -list -v -alias androiddebugkey -keystore "%USERPROFILE%\\.android\\debug.keystore" -storepass android -keypass android
+```

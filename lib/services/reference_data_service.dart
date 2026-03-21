@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sks/models/admin_profile.dart';
 import 'package:sks/models/driver.dart';
+import 'package:sks/models/parent.dart';
 import 'package:sks/models/school.dart';
 import 'package:sks/models/teacher.dart';
 
@@ -12,6 +13,7 @@ abstract class IReferenceDataService {
   Future<List<Driver>> getDriversByIds(Iterable<String> driverIds);
   Future<Teacher?> getTeacherById(String teacherId);
   Future<AdminProfile?> getAdminById(String adminId);
+  Future<Parent?> getParentById(String parentId);
 }
 
 class FirebaseReferenceDataService implements IReferenceDataService {
@@ -106,5 +108,17 @@ class FirebaseReferenceDataService implements IReferenceDataService {
     }
     final admin = AdminProfile.fromMap(snapshot.id, data);
     return admin.isArchived ? null : admin;
+  }
+
+  @override
+  Future<Parent?> getParentById(String parentId) async {
+    final snapshot =
+        await _firestore.collection('parents').doc(parentId).get();
+    final data = snapshot.data();
+    if (data == null) {
+      return null;
+    }
+    final parent = Parent.fromMap(snapshot.id, data);
+    return parent.isArchived ? null : parent;
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
+import 'package:sks/core/utils/geo_utils.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/models/app_user.dart';
@@ -109,7 +110,9 @@ class ParentHomeTab extends StatelessWidget {
                           builder: (_) => BusTrackingScreen(
                             busId: primaryBus.id,
                             childName: primaryChild.name,
+                            childId: primaryChild.id,
                             schoolId: primaryChild.schoolId,
+                            tripId: primaryChild.tripId,
                           ),
                         ),
                       );
@@ -318,6 +321,8 @@ class ParentHomeContent extends StatelessWidget {
       primarySchool?.lng ?? 100.5018,
     );
 
+    final isTripActive = primaryTrip?.status == TripStatus.active;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
@@ -326,20 +331,84 @@ class ParentHomeContent extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: SizedBox(
             height: 220,
-            child: mapBuilder != null
-                ? mapBuilder!(context, markers)
-                : AbsorbPointer(
-                    child: GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: schoolLatLng,
-                        zoom: 12,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: mapBuilder != null
+                      ? mapBuilder!(context, markers)
+                      : AbsorbPointer(
+                          child: GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: schoolLatLng,
+                              zoom: 12,
+                            ),
+                            liteModeEnabled: true,
+                            markers: markers,
+                            zoomControlsEnabled: false,
+                            myLocationButtonEnabled: false,
+                          ),
+                        ),
+                ),
+                // Live tracking overlay banner
+                if (isTripActive && onMapTap != null)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
                       ),
-                      liteModeEnabled: true,
-                      markers: markers,
-                      zoomControlsEnabled: false,
-                      myLocationButtonEnabled: false,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.0),
+                            Colors.black.withValues(alpha: 0.7),
+                          ],
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.statusGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            context.tr(AppStrings.busOnTheWay),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            context.tr(AppStrings.tripActiveTracking),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white.withValues(alpha: 0.8),
+                            size: 12,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+              ],
+            ),
           ),
         ),
       ),
@@ -401,16 +470,20 @@ class ParentHomeContent extends StatelessWidget {
             context: context,
             icon: Icons.pin_drop_outlined,
             iconColor: AppColors.statusAmber,
-            label: 'Pickup',
-            value: '${schedule.morningPickup} น.',
+            label: context.tr(AppStrings.pickupLabel),
+            value: context.trArgs(AppStrings.pickupTime, {
+              'time': schedule.morningPickup,
+            }),
           ),
           const SizedBox(height: 10),
           _buildTripTimeRow(
             context: context,
             icon: Icons.school_outlined,
             iconColor: AppColors.accentBlue,
-            label: 'Drop off',
-            value: '${schedule.morningDropoff} น.',
+            label: context.tr(AppStrings.dropOffLabel),
+            value: context.trArgs(AppStrings.pickupTime, {
+              'time': schedule.morningDropoff,
+            }),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -455,14 +528,57 @@ class ParentHomeContent extends StatelessWidget {
     final status = _resolveStudentStatus(child);
     final boardedTime = _findBoardingTime(child.name);
 
+    // Show ETA info when trip is active and child hasn't boarded yet
+    final isTripActive = primaryTrip?.status == TripStatus.active;
+    final busLat = primaryBus?.currentLat ?? 0.0;
+    final busLng = primaryBus?.currentLng ?? 0.0;
+    int? etaMinutes;
+    if (isTripActive && !child.hasBoarded && !child.hasArrived &&
+        child.pickupLat != null && child.pickupLng != null &&
+        busLat != 0 && busLng != 0) {
+      etaMinutes = estimateMinutesBetween(
+        busLat, busLng, child.pickupLat!, child.pickupLng!,
+      );
+    }
+    final hasEta = etaMinutes != null;
+
     return Row(
       children: [
-        ChildAvatar(
-          child: child,
-          size: 46,
-          backgroundColor: status.color.withValues(alpha: 0.12),
-          textColor: status.color,
-          fontSize: 16,
+        // Avatar with ETA badge overlay
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ChildAvatar(
+              child: child,
+              size: 46,
+              backgroundColor: status.color.withValues(alpha: 0.12),
+              textColor: status.color,
+              fontSize: 16,
+            ),
+            if (hasEta)
+              Positioned(
+                right: -6,
+                top: -6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${etaMinutes}m',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -493,8 +609,15 @@ class ParentHomeContent extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${context.tr(AppStrings.boardingTime)} $boardedTime',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      hasEta
+                          ? context.trArgs(AppStrings.busArrivingSoon, {
+                              'minutes': etaMinutes.toString(),
+                            })
+                          : '${context.tr(AppStrings.boardingTime)} $boardedTime',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: hasEta ? AppColors.primary : null,
+                        fontWeight: hasEta ? FontWeight.w500 : null,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -592,8 +715,10 @@ class ParentHomeContent extends StatelessWidget {
             icon: Icons.wb_sunny_outlined,
             iconColor: AppColors.statusAmber,
             label: context.tr(AppStrings.morningRound),
-            value:
-                'รับ ${schedule.morningPickup} น. - ส่ง ${schedule.morningDropoff} น.',
+            value: context.trArgs(AppStrings.scheduleTimeRange, {
+              'pickup': schedule.morningPickup,
+              'dropoff': schedule.morningDropoff,
+            }),
           ),
           const SizedBox(height: 8),
           _buildTripTimeRow(
@@ -601,8 +726,10 @@ class ParentHomeContent extends StatelessWidget {
             icon: Icons.nights_stay_outlined,
             iconColor: AppColors.accentBlue,
             label: context.tr(AppStrings.afternoonRound),
-            value:
-                'รับ ${schedule.eveningPickup} น. - ส่ง ${schedule.eveningDropoff} น.',
+            value: context.trArgs(AppStrings.scheduleTimeRange, {
+              'pickup': schedule.eveningPickup,
+              'dropoff': schedule.eveningDropoff,
+            }),
           ),
         ],
       ],

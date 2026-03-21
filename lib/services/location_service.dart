@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sks/models/bus.dart';
 
 abstract class ILocationService {
   Stream<Map<String, LatLng>> getBusLocationStream();
+  Stream<Position> watchDevicePosition();
 }
 
 class FirebaseLocationService implements ILocationService {
@@ -21,5 +23,14 @@ class FirebaseLocationService implements ILocationService {
       }
       return locations;
     });
+  }
+
+  @override
+  Stream<Position> watchDevicePosition() {
+    const settings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 50,
+    );
+    return Geolocator.getPositionStream(locationSettings: settings);
   }
 }

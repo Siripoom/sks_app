@@ -98,24 +98,40 @@ Future<void> main() async {
   );
 }
 
+const bool _forceDebugAppCheck = bool.fromEnvironment('USE_DEBUG_APP_CHECK');
+
+bool get _useDebugAppCheckProvider => kDebugMode || _forceDebugAppCheck;
+
 Future<void> _activateAppCheck() async {
   if (kIsWeb) {
     return;
   }
 
+  final useDebugProvider = _useDebugAppCheckProvider;
+
   switch (defaultTargetPlatform) {
     case TargetPlatform.android:
       await FirebaseAppCheck.instance.activate(
-        providerAndroid: kDebugMode
+        providerAndroid: useDebugProvider
             ? const AndroidDebugProvider()
             : const AndroidPlayIntegrityProvider(),
+      );
+      await _logAppCheckDebugState(
+        'Android',
+        isDebugProvider: useDebugProvider,
+        productionProviderLabel: 'Play Integrity',
       );
       return;
     case TargetPlatform.iOS:
       await FirebaseAppCheck.instance.activate(
-        providerApple: kDebugMode
+        providerApple: useDebugProvider
             ? const AppleDebugProvider()
             : const AppleAppAttestWithDeviceCheckFallbackProvider(),
+      );
+      await _logAppCheckDebugState(
+        'iOS',
+        isDebugProvider: useDebugProvider,
+        productionProviderLabel: 'App Attest with DeviceCheck fallback',
       );
       return;
     case TargetPlatform.macOS:
@@ -123,6 +139,56 @@ Future<void> _activateAppCheck() async {
     case TargetPlatform.linux:
     case TargetPlatform.fuchsia:
       return;
+  }
+}
+
+Future<void> _logAppCheckDebugState(
+  String platformLabel, {
+  required bool isDebugProvider,
+  required String productionProviderLabel,
+}) async {
+  if (!isDebugProvider) {
+    debugPrint(
+      '[AppCheck] $platformLabel $productionProviderLabel provider is active. '
+      'If token fetch fails with "App attestation failed", verify Firebase '
+      'App Check is registered for this app and the signing SHA-256 matches '
+      'the installed build.',
+    );
+    return;
+  }
+
+  if (_forceDebugAppCheck && !kDebugMode) {
+    debugPrint(
+      '[AppCheck] USE_DEBUG_APP_CHECK=true is forcing the debug provider '
+      'for this non-debug build.',
+    );
+  }
+
+  if (!kDebugMode && !_forceDebugAppCheck) {
+    return;
+  }
+
+  debugPrint(
+    '[AppCheck] $platformLabel debug provider is active. '
+    'Look for the native log message "Firebase App Check Debug Token" '
+    'or "Enter this debug secret into the allow list".',
+  );
+
+  FirebaseAppCheck.instance.onTokenChange.listen((token) {
+    debugPrint('[AppCheck] onTokenChange: ${token ?? '(null)'}');
+  });
+
+  try {
+    final token = await FirebaseAppCheck.instance.getToken(false);
+    debugPrint('[AppCheck] getToken(false): ${token ?? '(null)'}');
+    debugPrint(
+      '[AppCheck] If you still do not see the debug secret, perform an action '
+      'that hits Firebase such as login, Firestore read, Storage upload, or '
+      'a callable Function.',
+    );
+  } catch (error, stackTrace) {
+    debugPrint('[AppCheck] getToken(true) failed: $error');
+    debugPrintStack(label: '[AppCheck] stack trace', stackTrace: stackTrace);
   }
 }
 
@@ -216,6 +282,7 @@ class MyApp extends StatelessWidget {
           create: (_) => ParentProvider(
             services!.childService,
             services!.notificationService,
+            services!.tripService,
           ),
         ),
         ChangeNotifierProvider(
@@ -224,6 +291,7 @@ class MyApp extends StatelessWidget {
             services!.childService,
             services!.notificationService,
             services!.tripService,
+            services!.locationService,
           ),
         ),
         ChangeNotifierProvider(

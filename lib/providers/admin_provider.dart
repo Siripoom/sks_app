@@ -18,6 +18,7 @@ class AdminProvider extends ChangeNotifier {
 
   String _selectedSchoolId = '';
   bool _isBootstrapped = false;
+  bool _isBusy = false;
   String? _errorMessage;
 
   List<School> _schools = [];
@@ -40,6 +41,7 @@ class AdminProvider extends ChangeNotifier {
 
   String get selectedSchoolId => _selectedSchoolId;
   bool get isBootstrapped => _isBootstrapped;
+  bool get isBusy => _isBusy;
   String? get errorMessage => _errorMessage;
 
   List<School> get schools => _schools;
@@ -131,14 +133,17 @@ class AdminProvider extends ChangeNotifier {
 
   Future<bool> runGuarded(Future<void> Function() action) async {
     _errorMessage = null;
+    _isBusy = true;
     notifyListeners();
     try {
       await action();
       return true;
     } catch (error) {
       _errorMessage = error.toString();
-      notifyListeners();
       return false;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
     }
   }
 

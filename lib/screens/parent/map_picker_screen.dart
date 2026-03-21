@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
@@ -29,6 +30,8 @@ class MapPickerScreen extends StatefulWidget {
 class _MapPickerScreenState extends State<MapPickerScreen> {
   static const _defaultLocation = LatLng(13.7563, 100.5018);
   late LatLng _selectedLocation;
+  GoogleMapController? _mapController;
+  bool _loadingLocation = false;
 
   @override
   void initState() {
@@ -45,6 +48,67 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     });
   }
 
+  Future<void> _goToCurrentLocation() async {
+    setState(() => _loadingLocation = true);
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.tr(AppStrings.locationServiceDisabled)),
+            ),
+          );
+        }
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.tr(AppStrings.locationPermissionDenied)),
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.tr(AppStrings.locationPermissionDenied)),
+            ),
+          );
+        }
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition();
+      final newLocation = LatLng(position.latitude, position.longitude);
+
+      setState(() => _selectedLocation = newLocation);
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(newLocation, 16),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.tr(AppStrings.locationServiceDisabled)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loadingLocation = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,8 +120,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               target: _selectedLocation,
               zoom: 14,
             ),
+            myLocationEnabled: true,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
+            onMapCreated: (controller) => _mapController = controller,
             onTap: (latLng) {
               setState(() => _selectedLocation = latLng);
             },
@@ -71,6 +137,23 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 },
               ),
             },
+          ),
+          // Current location button
+          Positioned(
+            right: 16,
+            bottom: 200,
+            child: FloatingActionButton.small(
+              heroTag: 'myLocation',
+              onPressed: _loadingLocation ? null : _goToCurrentLocation,
+              tooltip: context.tr(AppStrings.currentLocation),
+              child: _loadingLocation
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.my_location),
+            ),
           ),
           Positioned(
             left: 16,
