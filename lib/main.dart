@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,6 +45,17 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global error handlers to prevent black screens from unhandled exceptions
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('[FlutterError] ${details.exceptionAsString()}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('[PlatformError] $error');
+    debugPrintStack(label: '[PlatformError]', stackTrace: stack);
+    return true;
+  };
 
   Object? startupError;
   AppServices? services;
@@ -97,6 +111,8 @@ Future<void> main() async {
     ),
   );
 }
+
+StreamSubscription<String?>? _appCheckTokenSubscription;
 
 const bool _forceDebugAppCheck = bool.fromEnvironment('USE_DEBUG_APP_CHECK');
 
@@ -174,7 +190,8 @@ Future<void> _logAppCheckDebugState(
     'or "Enter this debug secret into the allow list".',
   );
 
-  FirebaseAppCheck.instance.onTokenChange.listen((token) {
+  _appCheckTokenSubscription?.cancel();
+  _appCheckTokenSubscription = FirebaseAppCheck.instance.onTokenChange.listen((token) {
     debugPrint('[AppCheck] onTokenChange: ${token ?? '(null)'}');
   });
 

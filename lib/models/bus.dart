@@ -102,10 +102,16 @@ class Bus {
       isArchived: map['isArchived'] as bool? ?? false,
       archivedAt: _dateTimeFromMap(map['archivedAt']),
       status: BusStatusX.fromValue(map['status'] as String? ?? 'waiting'),
-      currentLat: (map['currentLat'] as num?)?.toDouble() ?? 0,
-      currentLng: (map['currentLng'] as num?)?.toDouble() ?? 0,
+      currentLat: _toDouble(map['currentLat']),
+      currentLng: _toDouble(map['currentLng']),
       estimatedArrival: _dateTimeFromMap(map['estimatedArrival']),
     );
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {

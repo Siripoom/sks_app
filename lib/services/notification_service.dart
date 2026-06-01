@@ -59,6 +59,7 @@ class FirebaseNotificationService extends ChangeNotifier
 
   bool _initialized = false;
   StreamSubscription<String>? _tokenRefreshSubscription;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
 
   CollectionReference<Map<String, dynamic>> get _notifications =>
       _firestore.collection('notifications');
@@ -89,7 +90,8 @@ class FirebaseNotificationService extends ChangeNotifier
           );
     }
 
-    FirebaseMessaging.onMessage.listen((message) async {
+    _foregroundMessageSubscription?.cancel();
+    _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen((message) async {
       final notification = message.notification;
       if (notification == null) {
         return;
@@ -132,6 +134,7 @@ class FirebaseNotificationService extends ChangeNotifier
     return _notifications
         .where('targetParentId', isEqualTo: parentId)
         .orderBy('createdAt', descending: true)
+        .limit(50)
         .snapshots()
         .map(_mapRecords);
   }
@@ -144,6 +147,7 @@ class FirebaseNotificationService extends ChangeNotifier
         .where('schoolId', isEqualTo: schoolId)
         .where('targetRole', isEqualTo: 'teacher')
         .orderBy('createdAt', descending: true)
+        .limit(50)
         .snapshots()
         .map(_mapRecords);
   }
@@ -153,6 +157,7 @@ class FirebaseNotificationService extends ChangeNotifier
     return _notifications
         .where('targetDriverId', isEqualTo: driverId)
         .orderBy('createdAt', descending: true)
+        .limit(50)
         .snapshots()
         .map(_mapRecords);
   }
@@ -209,7 +214,6 @@ class FirebaseNotificationService extends ChangeNotifier
           ? 'รถ ${bus.busNumber} ส่งถึงบ้านเวลา $time'
           : 'รถ ${bus.busNumber} ถึงโรงเรียนเวลา $time',
     );
-    notifyListeners();
   }
 
   @override
@@ -262,7 +266,6 @@ class FirebaseNotificationService extends ChangeNotifier
           : '${child.name} ขึ้นรถแล้ว',
       body: 'เวลา $time',
     );
-    notifyListeners();
   }
 
   @override
@@ -298,7 +301,6 @@ class FirebaseNotificationService extends ChangeNotifier
       title: 'รถออกเดินทาง',
       body: 'รถสาย ${bus.busNumber} เริ่มออกเดินทางเวลา $time',
     );
-    notifyListeners();
   }
 
   @override
@@ -332,7 +334,6 @@ class FirebaseNotificationService extends ChangeNotifier
       title: 'รถใกล้ถึงแล้ว',
       body: 'รถสาย ${bus.busNumber} จะถึง$stopLabel ${child.name} ใน ~$minutesAway นาที',
     );
-    notifyListeners();
   }
 
   @override
@@ -368,7 +369,6 @@ class FirebaseNotificationService extends ChangeNotifier
           ? '${child.name} ข้ามจุดส่ง'
           : '${child.name} ไม่อยู่ที่จุดรับ',
     );
-    notifyListeners();
   }
 
   Future<void> _saveToken(AppUser user, String token) async {
@@ -431,6 +431,7 @@ class FirebaseNotificationService extends ChangeNotifier
 
   @override
   void dispose() {
+    _foregroundMessageSubscription?.cancel();
     _tokenRefreshSubscription?.cancel();
     super.dispose();
   }

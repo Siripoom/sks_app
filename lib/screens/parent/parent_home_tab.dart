@@ -25,7 +25,7 @@ import 'package:sks/widgets/common/subsection_title.dart';
 import 'package:sks/widgets/common/user_avatar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ParentHomeTab extends StatelessWidget {
+class ParentHomeTab extends StatefulWidget {
   final VoidCallback onOpenSchedule;
   final Widget Function(BuildContext context, Set<Marker> markers)? mapBuilder;
 
@@ -36,12 +36,92 @@ class ParentHomeTab extends StatelessWidget {
   });
 
   @override
+  State<ParentHomeTab> createState() => _ParentHomeTabState();
+}
+
+class _ParentHomeTabState extends State<ParentHomeTab> {
+  late Future<List<School>> _schoolsFuture;
+  Future<Driver?>? _driverFuture;
+  String? _lastDriverId;
+
+  // Cached computed values
+  Map<String, School> _cachedSchoolsById = const {};
+  Map<String, Trip> _cachedTripsById = const {};
+  Map<String, Bus> _cachedBusesById = const {};
+  Set<Marker> _cachedMarkers = const {};
+  List<Bus> _lastBuses = const [];
+  List<Trip> _lastTrips = const [];
+  List<School> _lastSchools = const [];
+  List<Child> _lastAssignedChildren = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    final busProvider = context.read<BusProvider>();
+    busProvider.startTracking();
+    _schoolsFuture = context.read<IReferenceDataService>().getSchools();
+  }
+
+  @override
+  void dispose() {
+    context.read<BusProvider>().stopTracking();
+    super.dispose();
+  }
+
+  void _updateDriverFuture(String? driverId) {
+    if (driverId == _lastDriverId) return;
+    _lastDriverId = driverId;
+    if (driverId == null || driverId.isEmpty) {
+      _driverFuture = Future<Driver?>.value(null);
+    } else {
+      _driverFuture = context.read<IReferenceDataService>().getDriverById(driverId);
+    }
+  }
+
+  void _updateCachedMaps({
+    required List<Bus> buses,
+    required List<Trip> trips,
+    required List<School> schools,
+    required List<Child> assignedChildren,
+    required BusProvider busProvider,
+    required TripProvider tripProvider,
+    required Map<String, School> schoolsById,
+  }) {
+    if (!identical(trips, _lastTrips)) {
+      _lastTrips = trips;
+      _cachedTripsById = {for (final trip in trips) trip.id: trip};
+    }
+
+    if (!identical(buses, _lastBuses)) {
+      _lastBuses = buses;
+      _cachedBusesById = {for (final bus in buses) bus.id: bus};
+    }
+
+    if (!identical(schools, _lastSchools)) {
+      _lastSchools = schools;
+      _cachedSchoolsById = {for (final school in schools) school.id: school};
+    }
+
+    // Recompute markers when inputs change
+    if (!identical(assignedChildren, _lastAssignedChildren) ||
+        !identical(buses, _lastBuses) ||
+        !identical(schools, _lastSchools)) {
+      _lastAssignedChildren = assignedChildren;
+      _cachedMarkers = _buildMarkers(
+        children: assignedChildren,
+        busProvider: busProvider,
+        tripProvider: tripProvider,
+        schoolsById: _cachedSchoolsById,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppStateProvider>();
     final parentProvider = context.watch<ParentProvider>();
     final busProvider = context.watch<BusProvider>();
     final tripProvider = context.watch<TripProvider>();
-    final referenceDataService = context.read<IReferenceDataService>();
 
     final user = appState.currentUser;
     final children = parentProvider.myChildren;
@@ -54,43 +134,42 @@ class ParentHomeTab extends StatelessWidget {
       child: primaryChild,
     );
 
+    _updateDriverFuture(primaryBus?.driverId);
+
     return FutureBuilder<List<School>>(
-      future: referenceDataService.getSchools(),
+      future: _schoolsFuture,
       builder: (context, schoolSnapshot) {
-        final schoolsById = {
-          for (final school in schoolSnapshot.data ?? const <School>[])
-            school.id: school,
-        };
+        final schools = schoolSnapshot.data ?? const <School>[];
+
+        _updateCachedMaps(
+          buses: busProvider.buses,
+          trips: tripProvider.trips,
+          schools: schools,
+          assignedChildren: assignedChildren,
+          busProvider: busProvider,
+          tripProvider: tripProvider,
+          schoolsById: _cachedSchoolsById,
+        );
+
         final primarySchool = primaryChild == null
             ? null
-            : schoolsById[primaryChild.schoolId];
+            : _cachedSchoolsById[primaryChild.schoolId];
 
         return FutureBuilder<Driver?>(
-          future: primaryBus == null
-              ? Future<Driver?>.value(null)
-              : referenceDataService.getDriverById(primaryBus.driverId),
+          future: _driverFuture,
           builder: (context, driverSnapshot) {
             return ParentHomeContent(
               user: user,
               primarySchool: primarySchool,
               children: children,
               notifications: parentProvider.notifications,
-              tripsById: {
-                for (final trip in tripProvider.trips) trip.id: trip,
-              },
-              schoolsById: schoolsById,
-              busesById: {
-                for (final bus in busProvider.buses) bus.id: bus,
-              },
+              tripsById: _cachedTripsById,
+              schoolsById: _cachedSchoolsById,
+              busesById: _cachedBusesById,
               primaryTrip: primaryTrip,
               primaryBus: primaryBus,
               primaryDriver: driverSnapshot.data,
-              markers: _buildMarkers(
-                children: assignedChildren,
-                busProvider: busProvider,
-                tripProvider: tripProvider,
-                schoolsById: schoolsById,
-              ),
+              markers: _cachedMarkers,
               notificationCount: parentProvider.notifications.length,
               onNotificationTap: () {
                 Navigator.push(
@@ -100,7 +179,7 @@ class ParentHomeTab extends StatelessWidget {
                   ),
                 );
               },
-              onOpenSchedule: onOpenSchedule,
+              onOpenSchedule: widget.onOpenSchedule,
               onMapTap: primaryChild == null || primaryBus == null
                   ? null
                   : () {
@@ -117,7 +196,7 @@ class ParentHomeTab extends StatelessWidget {
                         ),
                       );
                     },
-              mapBuilder: mapBuilder,
+              mapBuilder: widget.mapBuilder,
             );
           },
         );

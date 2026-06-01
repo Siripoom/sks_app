@@ -2,7 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(flutter pub get:*)",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(xargs grep:*)",
+      "Read(//d/NoteApp/sks/**)",
+      "Read(///wsl.localhost/Ubuntu-22.04/home/siripoom/**)",
+      "Read(///wsl.localhost/Ubuntu-22.04/home/siripoom/sks-web/**)",
+      "Read(//wsl.localhost/Ubuntu-22.04/home/siripoom/sks-web/src/**)",
+      "Read(//mnt/c/Users/**)",
+      "Bash(wsl ls:*)",
+      "Bash(wsl.exe ls:*)",
+      "Bash(cmd /c \"dir \\\\\"\\\\\\\\\\\\\\\\wsl.localhost\\\\\\\\Ubuntu-22.04\\\\\\\\home\\\\\\\\siripoom\\\\\\\\sks-web\\\\\\\\src\\\\\\\\components\\\\\"\")",
+      "Bash(powershell -Command \"Get-ChildItem '\\\\\\\\wsl.localhost\\\\Ubuntu-22.04\\\\home\\\\siripoom\\\\sks-web\\\\src\\\\components' | Select-Object Name\")",
+      "Bash(powershell -Command \"Get-ChildItem '\\\\\\\\\\\\\\\\wsl.localhost\\\\\\\\Ubuntu-22.04\\\\\\\\home\\\\\\\\siripoom\\\\\\\\sks-web\\\\\\\\src\\\\\\\\components' | Select-Object Name\")",
+      "Bash(powershell.exe -Command \"Get-Item '\\\\\\\\wsl.localhost\\\\Ubuntu-22.04\\\\home\\\\siripoom\\\\sks-web\\\\src'\")",
+      "Bash(dir \"\\\\\\\\wsl.localhost\\\\Ubuntu-22.04\\\\home\\\\siripoom\\\\sks-web\\\\src\\\\components\")",
+      "Bash(cmd.exe /c \"dir \\\\\\\\wsl.localhost\\\\Ubuntu-22.04\\\\home\\\\siripoom\\\\sks-web\\\\src\\\\components 2>&1\")"
     ]
   }
 }

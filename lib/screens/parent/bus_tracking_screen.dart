@@ -41,7 +41,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<BusProvider>().loadAllBuses();
+    context.read<BusProvider>().startTracking();
     _schoolFuture = widget.schoolId == null || widget.schoolId!.trim().isEmpty
         ? Future<School?>.value(null)
         : context.read<IReferenceDataService>().getSchoolById(widget.schoolId!);
@@ -55,6 +55,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
   @override
   void dispose() {
     context.read<ParentProvider>().stopWatchingTrip();
+    context.read<BusProvider>().stopTracking();
     _mapController?.dispose();
     super.dispose();
   }
@@ -66,7 +67,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
     final watchedTrip = parentProvider.watchedTrip;
     final isTripActive = watchedTrip?.status == TripStatus.active;
 
-    // Auto-follow bus when position changes
+    // Auto-follow bus when position changes — deferred to after frame
     if (bus != null && _mapController != null) {
       final newPos = LatLng(bus.currentLat, bus.currentLng);
       if (newPos.latitude != 0 && newPos.longitude != 0 &&
@@ -74,7 +75,10 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
            _lastBusPosition!.latitude != newPos.latitude ||
            _lastBusPosition!.longitude != newPos.longitude)) {
         _lastBusPosition = newPos;
-        _mapController!.animateCamera(CameraUpdate.newLatLng(newPos));
+        final controller = _mapController!;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          controller.animateCamera(CameraUpdate.newLatLng(newPos));
+        });
       }
     }
 

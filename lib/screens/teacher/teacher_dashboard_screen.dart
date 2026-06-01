@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
@@ -33,6 +34,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   String _schoolId = '';
   School? _school;
 
+  // Cached stream references — created once after bootstrap
+  Stream<List<Map<String, String>>>? _notificationsStream;
+  Stream<List<Child>>? _childrenStream;
+
+  // Cached drivers future — recreated only when driverIds change
+  Future<List<Driver>>? _driversFuture;
+  List<String> _lastDriverIds = const [];
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +53,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final referenceDataService = context.read<IReferenceDataService>();
     final busProvider = context.read<BusProvider>();
     final tripProvider = context.read<TripProvider>();
+    final childService = context.read<IChildService>();
+    final notificationService = context.read<INotificationService>();
     final teacherId = appState.currentUser?.referenceId;
     if (teacherId != null) {
       final teacher = await referenceDataService.getTeacherById(teacherId);
@@ -57,13 +68,29 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       return;
     }
 
-    await busProvider.loadAllBuses();
+    // Cache stream references so they aren't recreated on every build
+    _notificationsStream = notificationService.watchNotificationsForSchool(_schoolId);
+    _childrenStream = childService.watchAllChildren();
+
+    busProvider.startTracking();
     if (!mounted) {
       return;
     }
     if (_schoolId.isNotEmpty) {
       await tripProvider.loadTripsForSchool(_schoolId);
     }
+  }
+
+  @override
+  void dispose() {
+    context.read<BusProvider>().stopTracking();
+    super.dispose();
+  }
+
+  void _updateDriversFuture(List<String> driverIds) {
+    if (listEquals(driverIds, _lastDriverIds)) return;
+    _lastDriverIds = driverIds;
+    _driversFuture = context.read<IReferenceDataService>().getDriversByIds(driverIds);
   }
 
   @override
@@ -79,29 +106,28 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     return FutureBuilder<void>(
       future: _bootstrapFuture,
       builder: (context, snapshot) {
-        final notificationService = context.read<INotificationService>();
-        final childService = context.read<IChildService>();
-        final referenceDataService = context.read<IReferenceDataService>();
-
         return StreamBuilder<List<Map<String, String>>>(
-          stream: notificationService.watchNotificationsForSchool(_schoolId),
+          stream: _notificationsStream,
           builder: (context, notificationsSnapshot) {
             final notifications = notificationsSnapshot.data ?? const [];
 
             return StreamBuilder<List<Child>>(
-              stream: childService.watchAllChildren(),
+              stream: _childrenStream,
               builder: (context, childrenSnapshot) {
                 final allChildren = childrenSnapshot.data ?? const <Child>[];
                 final trips = tripProvider.trips
                     .where((trip) => trip.schoolId == _schoolId)
                     .toList();
 
+                // Update drivers future only when driverIds change
+                final driverIds = trips
+                    .map((trip) => busesById[trip.busId]?.driverId ?? '')
+                    .where((driverId) => driverId.isNotEmpty)
+                    .toList();
+                _updateDriversFuture(driverIds);
+
                 return FutureBuilder<List<Driver>>(
-                  future: referenceDataService.getDriversByIds(
-                    trips
-                        .map((trip) => busesById[trip.busId]?.driverId ?? '')
-                        .where((driverId) => driverId.isNotEmpty),
-                  ),
+                  future: _driversFuture,
                   builder: (context, driversSnapshot) {
                     final drivers = {
                       for (final driver in driversSnapshot.data ?? const <Driver>[])

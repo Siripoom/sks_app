@@ -48,6 +48,8 @@ class AppLocalizations {
     AppStrings.selectUserHint: 'Please select a user',
     AppStrings.myChildren: 'My children',
     AppStrings.addChild: 'Add child',
+    AppStrings.editChild: 'Edit child',
+    AppStrings.childUpdatedSuccess: 'Child info updated',
     AppStrings.childName: 'Child name',
     AppStrings.homeAddress: 'Home address',
     AppStrings.selectBus: 'Select bus',

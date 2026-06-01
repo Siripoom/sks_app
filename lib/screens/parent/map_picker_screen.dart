@@ -41,6 +41,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         : _defaultLocation;
   }
 
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
   String _selectedLabel(BuildContext context) {
     return context.trArgs(AppStrings.selectedCoordinates, {
       'lat': _selectedLocation.latitude.toStringAsFixed(4),

@@ -12,6 +12,7 @@ import 'package:sks/models/trip.dart';
 import 'package:sks/providers/bus_provider.dart';
 import 'package:sks/providers/trip_provider.dart';
 import 'package:sks/screens/parent/bus_tracking_screen.dart';
+import 'package:sks/screens/parent/edit_child_screen.dart';
 import 'package:sks/services/reference_data_service.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/child_avatar.dart';
@@ -77,7 +78,22 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
         final school = snapshot.data;
 
         return Scaffold(
-          appBar: AppBar(title: Text(context.tr(AppStrings.childDetail))),
+          appBar: AppBar(
+            title: Text(context.tr(AppStrings.childDetail)),
+            actions: [
+              IconButton(
+                icon: const Icon(HugeIcons.strokeRoundedEdit02),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EditChildScreen(child: widget.child),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(

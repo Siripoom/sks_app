@@ -90,14 +90,20 @@ class TripStop {
     return TripStop(
       childId: map['childId'] as String? ?? '',
       sequence: map['sequence'] as int? ?? 0,
-      lat: (map['lat'] as num?)?.toDouble() ?? 0,
-      lng: (map['lng'] as num?)?.toDouble() ?? 0,
+      lat: _toDouble(map['lat']),
+      lng: _toDouble(map['lng']),
       pickupLabel: map['pickupLabel'] as String? ?? '',
       childName: map['childName'] as String? ?? '',
       status: TripStopStatusX.fromValue(map['status'] as String? ?? 'pending'),
       arrivedAt: _dateTimeFromMap(map['arrivedAt']),
       pickedUpAt: _dateTimeFromMap(map['pickedUpAt']),
     );
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {

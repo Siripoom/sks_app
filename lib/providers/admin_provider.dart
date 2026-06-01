@@ -39,6 +39,16 @@ class AdminProvider extends ChangeNotifier {
   StreamSubscription<List<Bus>>? _busesSubscription;
   StreamSubscription<List<Trip>>? _tripsSubscription;
 
+  bool _notifyScheduled = false;
+  void _scheduleNotify() {
+    if (_notifyScheduled) return;
+    _notifyScheduled = true;
+    Future.microtask(() {
+      _notifyScheduled = false;
+      notifyListeners();
+    });
+  }
+
   String get selectedSchoolId => _selectedSchoolId;
   bool get isBootstrapped => _isBootstrapped;
   bool get isBusy => _isBusy;
@@ -72,35 +82,35 @@ class AdminProvider extends ChangeNotifier {
       if (_selectedSchoolId.isEmpty && records.isNotEmpty) {
         _selectedSchoolId = records.first.id;
       }
-      notifyListeners();
+      _scheduleNotify();
     });
     _parentsSubscription = _adminService.watchParents().listen((records) {
       _parents = records;
-      notifyListeners();
+      _scheduleNotify();
     });
     _teachersSubscription = _adminService.watchTeachers().listen((records) {
       _teachers = records;
-      notifyListeners();
+      _scheduleNotify();
     });
     _driversSubscription = _adminService.watchDrivers().listen((records) {
       _drivers = records;
-      notifyListeners();
+      _scheduleNotify();
     });
     _adminsSubscription = _adminService.watchAdmins().listen((records) {
       _admins = records;
-      notifyListeners();
+      _scheduleNotify();
     });
     _childrenSubscription = _adminService.watchChildren().listen((records) {
       _children = records;
-      notifyListeners();
+      _scheduleNotify();
     });
     _busesSubscription = _adminService.watchBuses().listen((records) {
       _buses = records;
-      notifyListeners();
+      _scheduleNotify();
     });
     _tripsSubscription = _adminService.watchTrips().listen((records) {
       _trips = records;
-      notifyListeners();
+      _scheduleNotify();
     });
   }
 

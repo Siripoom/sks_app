@@ -7,9 +7,7 @@ import 'package:sks/services/bus_service.dart';
 import 'package:sks/services/location_service.dart';
 
 class BusProvider extends ChangeNotifier {
-  BusProvider(this._busService, this._locationService) {
-    _subscribeToLocationUpdates();
-  }
+  BusProvider(this._busService, this._locationService);
 
   final IBusService _busService;
   final ILocationService _locationService;
@@ -18,9 +16,32 @@ class BusProvider extends ChangeNotifier {
   Map<String, LatLng> _busLocations = {};
   StreamSubscription<List<Bus>>? _busSubscription;
   StreamSubscription<Map<String, LatLng>>? _locationSubscription;
+  int _trackingRefCount = 0;
 
   List<Bus> get buses => _buses;
   Map<String, LatLng> get busLocations => _busLocations;
+
+  /// Call from screens that need live bus tracking.
+  /// Pairs with [stopTracking] in dispose.
+  void startTracking() {
+    _trackingRefCount++;
+    if (_trackingRefCount == 1) {
+      _subscribeToBuses();
+      _subscribeToLocationUpdates();
+    }
+  }
+
+  /// Call from screen dispose. Cancels streams when no screen needs tracking.
+  void stopTracking() {
+    _trackingRefCount--;
+    if (_trackingRefCount <= 0) {
+      _trackingRefCount = 0;
+      _busSubscription?.cancel();
+      _busSubscription = null;
+      _locationSubscription?.cancel();
+      _locationSubscription = null;
+    }
+  }
 
   Future<void> loadAllBuses() async {
     await _busSubscription?.cancel();
@@ -47,7 +68,17 @@ class BusProvider extends ChangeNotifier {
     return success;
   }
 
+  void _subscribeToBuses() {
+    _busSubscription?.cancel();
+    _busSubscription = _busService.watchAllBuses().listen((buses) {
+      _buses = buses;
+      _syncLocationsIntoBuses();
+      notifyListeners();
+    });
+  }
+
   void _subscribeToLocationUpdates() {
+    _locationSubscription?.cancel();
     _locationSubscription = _locationService.getBusLocationStream().listen((
       locations,
     ) {
@@ -58,6 +89,7 @@ class BusProvider extends ChangeNotifier {
   }
 
   void _syncLocationsIntoBuses() {
+    if (_locationSubscription == null) return;
     for (final bus in _buses) {
       final latLng = _busLocations[bus.id];
       if (latLng == null) {

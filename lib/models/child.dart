@@ -153,8 +153,8 @@ class Child {
       schoolId: map['schoolId'] as String? ?? '',
       homeAddress: map['homeAddress'] as String? ?? '',
       pickupLabel: map['pickupLabel'] as String? ?? '',
-      pickupLat: (map['pickupLat'] as num?)?.toDouble(),
-      pickupLng: (map['pickupLng'] as num?)?.toDouble(),
+      pickupLat: _toDoubleNullable(map['pickupLat']),
+      pickupLng: _toDoubleNullable(map['pickupLng']),
       qrCodeValue: map['qrCodeValue'] as String? ?? '',
       photoUrl: map['photoUrl'] as String? ?? '',
       schoolName: map['schoolName'] as String? ?? '',
@@ -169,6 +169,12 @@ class Child {
       hasBoarded: map['hasBoarded'] as bool? ?? false,
       hasArrived: map['hasArrived'] as bool? ?? false,
     );
+  }
+
+  static double? _toDoubleNullable(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {

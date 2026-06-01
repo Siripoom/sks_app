@@ -11,6 +11,8 @@ class AppStrings {
 
   static const String myChildren = 'บุตรหลานของฉัน';
   static const String addChild = 'เพิ่มลูก';
+  static const String editChild = 'แก้ไขข้อมูลลูก';
+  static const String childUpdatedSuccess = 'อัปเดตข้อมูลลูกเรียบร้อย';
   static const String childName = 'ชื่อลูก';
   static const String homeAddress = 'ที่อยู่บ้าน';
   static const String selectBus = 'เลือกรถ';
@@ -211,7 +213,7 @@ class AppStrings {
   static const String selectIssueType = 'เลือกประเภทเรื่อง';
   static const String roleAdmin = 'Admin';
   static const String welcome = 'Welcome';
-  static const String welcomeSubtitle = 'Safe You Can See, Every Mile';
+  static const String welcomeSubtitle = 'Safety You Can See, Every Mile';
   static const String startupFirebaseIncomplete =
       'Firebase configuration is incomplete.';
   static const String startupFirebaseDescription =

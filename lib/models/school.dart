@@ -74,8 +74,8 @@ class School {
     return School(
       id: id,
       name: map['name'] as String? ?? '',
-      lat: (map['lat'] as num?)?.toDouble() ?? 0,
-      lng: (map['lng'] as num?)?.toDouble() ?? 0,
+      lat: _toDouble(map['lat']),
+      lng: _toDouble(map['lng']),
       address: map['address'] as String? ?? '',
       morningPickup: map['morningPickup'] as String? ?? '',
       morningDropoff: map['morningDropoff'] as String? ?? '',
@@ -84,6 +84,12 @@ class School {
       isArchived: map['isArchived'] as bool? ?? false,
       archivedAt: _dateTimeFromMap(map['archivedAt']),
     );
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {
