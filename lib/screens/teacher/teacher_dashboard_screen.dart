@@ -69,7 +69,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     }
 
     // Cache stream references so they aren't recreated on every build
-    _notificationsStream = notificationService.watchNotificationsForSchool(_schoolId);
+    _notificationsStream = notificationService.watchNotificationsForSchool(
+      _schoolId,
+    );
     _childrenStream = childService.watchAllChildren();
 
     busProvider.startTracking();
@@ -90,7 +92,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   void _updateDriversFuture(List<String> driverIds) {
     if (listEquals(driverIds, _lastDriverIds)) return;
     _lastDriverIds = driverIds;
-    _driversFuture = context.read<IReferenceDataService>().getDriversByIds(driverIds);
+    _driversFuture = context.read<IReferenceDataService>().getDriversByIds(
+      driverIds,
+    );
   }
 
   @override
@@ -99,9 +103,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final busProvider = context.watch<BusProvider>();
     final tripProvider = context.watch<TripProvider>();
     final teacherName = appState.currentUser?.name ?? '';
-    final busesById = {
-      for (final bus in busProvider.buses) bus.id: bus,
-    };
+    final busesById = {for (final bus in busProvider.buses) bus.id: bus};
 
     return FutureBuilder<void>(
       future: _bootstrapFuture,
@@ -116,7 +118,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               builder: (context, childrenSnapshot) {
                 final allChildren = childrenSnapshot.data ?? const <Child>[];
                 final trips = tripProvider.trips
-                    .where((trip) => trip.schoolId == _schoolId)
+                    .where(
+                      (trip) => trip.effectiveSchoolIds.contains(_schoolId),
+                    )
                     .toList();
 
                 // Update drivers future only when driverIds change
@@ -130,7 +134,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   future: _driversFuture,
                   builder: (context, driversSnapshot) {
                     final drivers = {
-                      for (final driver in driversSnapshot.data ?? const <Driver>[])
+                      for (final driver
+                          in driversSnapshot.data ?? const <Driver>[])
                         driver.id: driver,
                     };
                     final assignedStudentCount = trips.fold<int>(
@@ -249,16 +254,16 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                         children: [
                                           Text(
                                             teacherName,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.titleMedium,
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
                                             _school?.name ?? '',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
                                           ),
                                         ],
                                       ),
@@ -281,17 +286,16 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                               title: context.tr(AppStrings.pickupStatus),
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: AppSurfaceCard(
                                 inner: true,
                                 padding: const EdgeInsets.all(16),
                                 borderRadius: BorderRadius.circular(24),
                                 child: Text(
                                   '${trips.length} ${context.tr(AppStrings.tripLabel)} - $assignedStudentCount ${context.tr(AppStrings.students)}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: AppColors.textSecondary,
                                       ),
@@ -302,7 +306,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                             ...trips.map((trip) {
                               final bus = busesById[trip.busId];
                               final busChildren = allChildren
-                                  .where((child) => trip.childIds.contains(child.id))
+                                  .where(
+                                    (child) => trip.childIds.contains(child.id),
+                                  )
                                   .toList();
                               final driver = bus == null
                                   ? null
@@ -341,8 +347,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                                   borderRadius: BorderRadius.circular(24),
                                   child: Text(
                                     context.tr(AppStrings.noTripToday),
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                   ),
                                 ),
                               ),

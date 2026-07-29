@@ -41,6 +41,7 @@ class ParentHomeTab extends StatefulWidget {
 
 class _ParentHomeTabState extends State<ParentHomeTab> {
   late Future<List<School>> _schoolsFuture;
+  late final BusProvider _busProvider;
   Future<Driver?>? _driverFuture;
   String? _lastDriverId;
 
@@ -57,14 +58,14 @@ class _ParentHomeTabState extends State<ParentHomeTab> {
   @override
   void initState() {
     super.initState();
-    final busProvider = context.read<BusProvider>();
-    busProvider.startTracking();
+    _busProvider = context.read<BusProvider>();
+    _busProvider.startTracking();
     _schoolsFuture = context.read<IReferenceDataService>().getSchools();
   }
 
   @override
   void dispose() {
-    context.read<BusProvider>().stopTracking();
+    _busProvider.stopTracking();
     super.dispose();
   }
 
@@ -74,7 +75,9 @@ class _ParentHomeTabState extends State<ParentHomeTab> {
     if (driverId == null || driverId.isEmpty) {
       _driverFuture = Future<Driver?>.value(null);
     } else {
-      _driverFuture = context.read<IReferenceDataService>().getDriverById(driverId);
+      _driverFuture = context.read<IReferenceDataService>().getDriverById(
+        driverId,
+      );
     }
   }
 
@@ -125,8 +128,12 @@ class _ParentHomeTabState extends State<ParentHomeTab> {
 
     final user = appState.currentUser;
     final children = parentProvider.myChildren;
-    final assignedChildren = children.where((child) => child.isAssigned).toList();
-    final primaryChild = assignedChildren.isNotEmpty ? assignedChildren.first : null;
+    final assignedChildren = children
+        .where((child) => child.isAssigned)
+        .toList();
+    final primaryChild = assignedChildren.isNotEmpty
+        ? assignedChildren.first
+        : null;
     final primaryTrip = tripProvider.getTripById(primaryChild?.tripId);
     final primaryBus = _resolveBus(
       busProvider: busProvider,
@@ -301,7 +308,9 @@ class ParentHomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assignedChildren = children.where((child) => child.isAssigned).toList();
+    final assignedChildren = children
+        .where((child) => child.isAssigned)
+        .toList();
     final schedule = _resolveSchedule(
       date: DateTime.now(),
       school: primarySchool,
@@ -612,11 +621,18 @@ class ParentHomeContent extends StatelessWidget {
     final busLat = primaryBus?.currentLat ?? 0.0;
     final busLng = primaryBus?.currentLng ?? 0.0;
     int? etaMinutes;
-    if (isTripActive && !child.hasBoarded && !child.hasArrived &&
-        child.pickupLat != null && child.pickupLng != null &&
-        busLat != 0 && busLng != 0) {
+    if (isTripActive &&
+        !child.hasBoarded &&
+        !child.hasArrived &&
+        child.pickupLat != null &&
+        child.pickupLng != null &&
+        busLat != 0 &&
+        busLng != 0) {
       etaMinutes = estimateMinutesBetween(
-        busLat, busLng, child.pickupLat!, child.pickupLng!,
+        busLat,
+        busLng,
+        child.pickupLat!,
+        child.pickupLng!,
       );
     }
     final hasEta = etaMinutes != null;

@@ -6,7 +6,6 @@ import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/providers/app_state_provider.dart';
-import 'package:sks/screens/parent/parent_main_screen.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 
 class PrivacyTermsScreen extends StatefulWidget {
@@ -45,22 +44,7 @@ class _PrivacyTermsScreenState extends State<PrivacyTermsScreen> {
       return;
     }
 
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.tr(AppStrings.registerSuccess),
-            style: GoogleFonts.prompt(),
-          ),
-          backgroundColor: AppColors.statusGreen,
-        ),
-      );
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const ParentMainScreen()),
-        (route) => false,
-      );
-    } else {
+    if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

@@ -27,6 +27,7 @@ class CurrentStopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDropoff = stop.action == 'dropoff';
     return AppSurfaceCard(
       inner: true,
       padding: const EdgeInsets.all(16),
@@ -107,7 +108,7 @@ class CurrentStopCard extends StatelessWidget {
               onPressed: onNavigate,
               icon: const Icon(HugeIcons.strokeRoundedNavigation01, size: 18),
               label: Text(
-                isToHome ? 'นำทางไปจุดส่ง' : 'นำทางไปจุดรับ',
+                isDropoff ? 'นำทางไปจุดส่ง' : 'นำทางไปจุดรับ',
                 style: GoogleFonts.prompt(fontWeight: FontWeight.w500),
               ),
               style: OutlinedButton.styleFrom(
@@ -131,7 +132,7 @@ class CurrentStopCard extends StatelessWidget {
                     onPressed: onPickedUp,
                     icon: const Icon(HugeIcons.strokeRoundedTick01, size: 18),
                     label: Text(
-                      isToHome ? 'ส่งแล้ว' : 'รับแล้ว',
+                      isDropoff ? 'ส่งแล้ว' : 'รับแล้ว',
                       style: GoogleFonts.prompt(fontWeight: FontWeight.w600),
                     ),
                     style: ElevatedButton.styleFrom(

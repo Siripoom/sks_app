@@ -5,6 +5,7 @@ import 'package:sks/core/localization/app_localizations.dart';
 import 'package:sks/providers/app_state_provider.dart';
 import 'package:sks/screens/common/admin_support_screen.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
+import 'package:sks/widgets/common/account_deletion_tile.dart';
 
 class TeacherSettingsScreen extends StatelessWidget {
   const TeacherSettingsScreen({super.key});
@@ -57,6 +58,8 @@ class TeacherSettingsScreen extends StatelessWidget {
                   );
                 },
               ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              const AccountDeletionTile(),
             ],
           ),
         ),

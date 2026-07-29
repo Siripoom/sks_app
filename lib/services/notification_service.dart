@@ -91,7 +91,9 @@ class FirebaseNotificationService extends ChangeNotifier
     }
 
     _foregroundMessageSubscription?.cancel();
-    _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen((message) async {
+    _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen((
+      message,
+    ) async {
       final notification = message.notification;
       if (notification == null) {
         return;
@@ -189,7 +191,7 @@ class FirebaseNotificationService extends ChangeNotifier
           time: time,
           targetParentId: child.parentId,
           targetRole: 'parent',
-          schoolId: trip.schoolId,
+          schoolId: child.schoolId,
         ),
       ),
       _createRecord(
@@ -200,7 +202,7 @@ class FirebaseNotificationService extends ChangeNotifier
           sender: 'ระบบ',
           createdAt: now,
           time: time,
-          schoolId: trip.schoolId,
+          schoolId: child.schoolId,
           targetRole: 'teacher',
         ),
       ),
@@ -225,10 +227,15 @@ class FirebaseNotificationService extends ChangeNotifier
     final now = DateTime.now();
     final time = _timeLabel(now);
     final isToHome = trip.round == TripRound.toHome;
-    final parentMessage = isToHome
+    final usesRouteStops = trip.routeVersion >= 2;
+    final parentMessage = usesRouteStops
+        ? '${child.name} ขึ้นรถแล้ว'
+        : isToHome
         ? '${child.name} ลงรถแล้ว (ถึงบ้านแล้ว)'
         : '${child.name} ขึ้นรถแล้ว';
-    final teacherMessage = isToHome
+    final teacherMessage = usesRouteStops
+        ? '${child.name} เช็กอินขึ้นรถ ${bus.busNumber} แล้ว'
+        : isToHome
         ? '${child.name} ลงรถ ${bus.busNumber} แล้ว (ส่งถึงบ้าน)'
         : '${child.name} เช็กอินขึ้นรถ ${bus.busNumber} แล้ว';
 
@@ -243,7 +250,7 @@ class FirebaseNotificationService extends ChangeNotifier
           time: time,
           targetParentId: child.parentId,
           targetRole: 'parent',
-          schoolId: trip.schoolId,
+          schoolId: child.schoolId,
         ),
       ),
       _createRecord(
@@ -254,7 +261,7 @@ class FirebaseNotificationService extends ChangeNotifier
           sender: 'ระบบ',
           createdAt: now,
           time: time,
-          schoolId: trip.schoolId,
+          schoolId: child.schoolId,
           targetRole: 'teacher',
         ),
       ),
@@ -262,7 +269,9 @@ class FirebaseNotificationService extends ChangeNotifier
 
     await _showLocalNotification(
       title: isToHome
-          ? '${child.name} ลงรถแล้ว'
+          ? usesRouteStops
+                ? '${child.name} ขึ้นรถแล้ว'
+                : '${child.name} ลงรถแล้ว'
           : '${child.name} ขึ้นรถแล้ว',
       body: 'เวลา $time',
     );
@@ -290,7 +299,7 @@ class FirebaseNotificationService extends ChangeNotifier
             time: time,
             targetParentId: child.parentId,
             targetRole: 'parent',
-            schoolId: trip.schoolId,
+            schoolId: child.schoolId,
           ),
         ),
       );
@@ -320,19 +329,21 @@ class FirebaseNotificationService extends ChangeNotifier
       AppNotificationRecord(
         id: '',
         type: 'bus_approaching',
-        message: 'รถสาย ${bus.busNumber} กำลังจะถึง$stopLabel ${child.name} ใน ~$minutesAway นาที',
+        message:
+            'รถสาย ${bus.busNumber} กำลังจะถึง$stopLabel ${child.name} ใน ~$minutesAway นาที',
         sender: 'ระบบ',
         createdAt: now,
         time: time,
         targetParentId: child.parentId,
         targetRole: 'parent',
-        schoolId: trip.schoolId,
+        schoolId: child.schoolId,
       ),
     );
 
     await _showLocalNotification(
       title: 'รถใกล้ถึงแล้ว',
-      body: 'รถสาย ${bus.busNumber} จะถึง$stopLabel ${child.name} ใน ~$minutesAway นาที',
+      body:
+          'รถสาย ${bus.busNumber} จะถึง$stopLabel ${child.name} ใน ~$minutesAway นาที',
     );
   }
 
@@ -359,7 +370,7 @@ class FirebaseNotificationService extends ChangeNotifier
         time: time,
         targetParentId: child.parentId,
         targetRole: 'parent',
-        schoolId: trip.schoolId,
+        schoolId: child.schoolId,
       ),
     );
 

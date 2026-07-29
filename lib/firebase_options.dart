@@ -51,11 +51,11 @@ class DefaultFirebaseOptions {
 
   static FirebaseOptions get ios => FirebaseOptions(
     apiKey: 'AIzaSyCCqYxA-dJt070j1idK_xmFnY0TJRdMhes',
-    appId: '1:354366613674:ios:35ead0a6fcdea705b448d3',
+    appId: '1:354366613674:ios:025c55da76983ef3b448d3',
     messagingSenderId: _messagingSenderId,
     projectId: _projectId,
     storageBucket: _storageBucket,
-    iosBundleId: 'com.sks.app',
+    iosBundleId: 'com.app.smartkidsshuttle',
     iosClientId: const String.fromEnvironment('FIREBASE_IOS_CLIENT_ID'),
   );
 

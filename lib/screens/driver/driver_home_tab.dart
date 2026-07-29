@@ -45,10 +45,10 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
 
   Future<void> _loadSchool() async {
     final trip = context.read<DriverProvider>().activeTrip;
-    if (trip != null && trip.schoolId.isNotEmpty) {
-      final school = await context
-          .read<IReferenceDataService>()
-          .getSchoolById(trip.schoolId);
+    if (trip != null && trip.routeVersion < 2 && trip.schoolId.isNotEmpty) {
+      final school = await context.read<IReferenceDataService>().getSchoolById(
+        trip.schoolId,
+      );
       if (mounted) setState(() => _school = school);
     }
   }
@@ -56,9 +56,24 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
   Future<void> _startTrip() async {
     setState(() => _loading = true);
     try {
-      await context.read<DriverProvider>().startTrip();
+      final result = await context.read<DriverProvider>().startTrip();
+      if (!mounted) return;
+      if (result == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr(AppStrings.unableStartTrip))),
+        );
+      } else if (result.shouldWarnAboutSavedRoute) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr(AppStrings.startedWithSavedRoute))),
+        );
+      }
     } catch (e) {
       debugPrint('startTrip error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr(AppStrings.unableStartTrip))),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -129,8 +144,8 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
     final allDone = driverProvider.allStopsDone;
     final tripCompleted =
         driverProvider.activeTrip?.status == TripStatus.completed;
-    final isToHome =
-        driverProvider.activeTrip?.round == TripRound.toHome;
+    final isToHome = driverProvider.activeTrip?.round == TripRound.toHome;
+    final usesRouteStops = (driverProvider.activeTrip?.routeVersion ?? 1) >= 2;
 
     return StreamBuilder<List<Map<String, String>>>(
       stream: notificationService.watchMessagesForDriver(driverId),
@@ -213,7 +228,7 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        if (!isToHome && _school != null)
+                        if (!usesRouteStops && !isToHome && _school != null)
                           SizedBox(
                             width: double.infinity,
                             height: 44,
@@ -252,6 +267,8 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                             ),
                             label: Text(
                               isToHome
+                                  ? 'เสร็จสิ้นการเดินทาง'
+                                  : usesRouteStops
                                   ? 'เสร็จสิ้นการเดินทาง'
                                   : 'ถึงโรงเรียนแล้ว',
                               style: GoogleFonts.prompt(
@@ -323,36 +340,38 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      ...children.take(3).map(
-                        (child) => ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: child.hasBoarded
-                                  ? AppColors.statusGreen.withValues(
-                                      alpha: 0.08,
-                                    )
-                                  : AppColors.statusGrey.withValues(
-                                      alpha: 0.08,
-                                    ),
-                            ),
-                            child: Icon(
-                              child.hasBoarded
-                                  ? HugeIcons.strokeRoundedTick01
-                                  : HugeIcons.strokeRoundedUser02,
-                              size: 16,
-                              color: child.hasBoarded
-                                  ? AppColors.statusGreen
-                                  : AppColors.statusGrey,
+                      ...children
+                          .take(3)
+                          .map(
+                            (child) => ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: child.hasBoarded
+                                      ? AppColors.statusGreen.withValues(
+                                          alpha: 0.08,
+                                        )
+                                      : AppColors.statusGrey.withValues(
+                                          alpha: 0.08,
+                                        ),
+                                ),
+                                child: Icon(
+                                  child.hasBoarded
+                                      ? HugeIcons.strokeRoundedTick01
+                                      : HugeIcons.strokeRoundedUser02,
+                                  size: 16,
+                                  color: child.hasBoarded
+                                      ? AppColors.statusGreen
+                                      : AppColors.statusGrey,
+                                ),
+                              ),
+                              title: Text(child.name),
+                              dense: true,
                             ),
                           ),
-                          title: Text(child.name),
-                          dense: true,
-                        ),
-                      ),
                       if (children.length > 3)
                         Align(
                           alignment: Alignment.centerRight,
@@ -417,10 +436,7 @@ class _DriverHomeTabState extends State<DriverHomeTab> {
         icon: const Icon(HugeIcons.strokeRoundedPlay, size: 22),
         label: Text(
           context.tr(AppStrings.startTrip),
-          style: GoogleFonts.prompt(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.prompt(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.statusGreen,

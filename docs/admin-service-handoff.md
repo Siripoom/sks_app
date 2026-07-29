@@ -186,44 +186,32 @@ behavior สำคัญ:
 
 | Flow | Read | Write path | Side effects / rules |
 | --- | --- | --- | --- |
-| List trips | `trips`, `schools`, `buses`, `children` | ไม่มี | sort ล่าสุดก่อนตาม `serviceDate` |
-| Create trip | `trips`, `schools`, `buses`, `children` | direct Firestore transaction `saveTrip()` | assign child ทุกคนเข้า trip และ sync child state |
-| Edit trip | `trips`, `schools`, `buses`, `children` | direct Firestore transaction `saveTrip()` | child ที่ถูกถอดออกจะถูก reset assignment |
-| Archive / restore trip | `trips`, `children`, `parents` | direct Firestore transaction `setTripArchived()` | ถ้า archive จะ clear `childIds` ใน trip และ unassign child ทุกคน |
+| List trips | `trips`, `schools`, `buses`, `children` | ไม่มี | filter ด้วย `schoolIds`; reader fallback จาก legacy `schoolId` |
+| Preview route | `buses`, `children`, `schools` | callable `manageTrip` action `calculateRoute` | derive schools/stops, validate conflicts และคืน input hash |
+| Create / edit trip | related records | callable `manageTrip` action `create` / `update` | backend สร้าง canonical grouped stops และ sync child assignment |
+| Archive / restore trip | `trips`, `children`, `parents` | callable `manageTrip` action `archive` / `restore` | archive unassign เด็ก; legacy draft/archived convert เมื่อแก้ |
 
 field หลักที่ UI ส่งตอน create/edit:
 
 - `id`
-- `schoolId`
 - `busId`
 - `serviceDate`
 - `round`
 - `scheduledStartAt`
 - `childIds`
-- `stops`
-
-รูปแบบ `stops` ที่หน้า mobile สร้าง:
-
-- `childId`
-- `sequence`
-- `lat`
-- `lng`
-- `pickupLabel`
-- `childName`
-- `status`
-- `arrivedAt`
-- `pickedUpAt`
+- `origin`: `{ lat, lng, label }`
+- `routePlan` ที่ได้จาก `calculateRoute`
 
 business rules สำคัญ:
 
-- trip ต้องมี `schoolId` และ `busId`
-- school และ bus ต้อง active
-- child ทุกคนใน trip ต้อง active และ `schoolId` ตรงกับ trip
+- trip ต้องมี active bus, เด็กอย่างน้อยหนึ่งคน และ origin ที่มีพิกัด
+- backend derive `schoolIds`; เด็กและโรงเรียนทั้งหมดต้อง active และมีพิกัด
+- home stops รวมด้วยพิกัดปัด 5 ตำแหน่ง; school stops รวมตาม `schoolId`
+- `toSchool`: home pickup → school drop; `toHome`: school pickup → home drop
+- save ได้เมื่อ `routePlan.inputHash` ตรงกับ inputs ปัจจุบันเท่านั้น
 - ห้ามมี bus ซ้ำใน open trip รอบเดียวกันของ `serviceDateKey`
 - ห้ามมี child ซ้ำใน open trip รอบเดียวกันของ `serviceDateKey`
-- open trip คือ trip ที่ `isArchived != true` และ `status` ไม่ใช่ `completed` หรือ `cancelled`
-- ตอน save จะคำนวณ `serviceDateKey = toUtc().toIso8601String().substring(0, 10)`
-- trip ใหม่ default `status = 'draft'`
+- API ล้มเหลวให้เรียก `calculateRoute` พร้อม `manual: true`; reorder ได้เฉพาะภายใน phase
 
 ## 5. Data Contract Summary ของ Collection ที่เกี่ยวข้อง
 
@@ -357,14 +345,17 @@ field ที่ทีมเว็บต้องไม่พลาด:
 
 field ที่ทีมเว็บต้องไม่พลาด:
 
-- `schoolId`
+- `schoolIds`
+- `routeVersion`: `2` สำหรับ multi-school workflow
 - `busId`
 - `serviceDate`
 - `serviceDateKey`
 - `round`: `toSchool` | `toHome`
 - `scheduledStartAt`
 - `childIds`
-- `stops`
+- `origin`: `{ lat, lng, label }`
+- `stops`: grouped stop ที่มี `id`, `type`, `action`, `childIds`, `schoolId`, พิกัด, `sequence`, `status`
+- `routePlan`: provider, input hash, metrics, polylines, calculated time และ manual flag
 - `currentStopIndex`
 - `status`: `draft` | `active` | `completed` | `cancelled`
 - `isArchived`
@@ -377,6 +368,7 @@ field ที่ทีมเว็บต้องไม่พลาด:
 หมายเหตุ:
 
 - query conflict ของ trip พึ่ง index `(serviceDateKey, round)`
+- legacy `schoolId` ต้องอ่านเป็น `schoolIds: [schoolId]`
 
 ## 6. Callable Function Contract
 
@@ -425,21 +417,22 @@ response โดยรวม:
 - `create` คืนอย่างน้อย `uid` และ `referenceId`
 - action อื่นคืน `{ ok: true }`
 
-## 6.2 Backend capability available แต่ mobile admin ยังไม่ได้เรียก
+## 6.2 Structural callable functions
 
-function เหล่านี้มีอยู่ใน `functions/index.js` แต่หน้า admin ฝั่ง Flutter ปัจจุบันยังไม่ได้ใช้:
+Flutter และ Web ใช้ callable สำหรับ structural writes:
 
 - `manageSchool`
 - `manageBus`
-- `manageChild`
 - `manageTrip`
-- `assignChildToTrip`
-- `removeChildFromTrip`
 
-หมายเหตุสำคัญ:
+`manageTrip` รองรับ `calculateRoute`, `create`, `update`, `archive`, `restore` และ `status`.
+`calculateRoute` รับ `busId`, `round`, วันที่/เวลา, `childIds`, `origin` และ optional `manual`; response คืน canonical stops, `schoolIds`, metrics, polylines และ `inputHash`.
 
-- behavior ของ function กลุ่มนี้โดยรวมพยายาม mirror logic ที่ฝั่ง mobile ทำผ่าน direct Firestore transaction/set
-- ถ้าทีมเว็บจะใช้ callable เหล่านี้แทน direct Firestore ควรเทียบ behavior กับ current contract ในหัวข้อด้านบนก่อน โดยเฉพาะ side effect เรื่อง relation และ assignment state
+Route Optimization ใช้ `optimizeTours` สอง phase. Runtime service account ต้องมี `routeoptimization.locations.use` และ project ต้องเปิด Route Optimization API/billing. Deploy Functions ก่อน release Web/Flutter แล้วจึง deploy strict Rules.
+
+`startDriverTrip` ใช้สำหรับคนขับเริ่มทริป โดยตรวจว่าคนขับผูกกับรถของทริปก่อนใช้ GPS ล่าสุดคำนวณลำดับ stop ใหม่แบบ nearest-neighbor ตามระยะทางขับจริง แยก home/school เป็นสอง phase แล้วเปลี่ยนสถานะทริปและรถใน transaction เดียว หาก GPS หรือ Routes API ใช้ไม่ได้จะเริ่มด้วย route ที่บันทึกไว้เดิม ทริป legacy v1 ไม่คำนวณใหม่
+
+Dynamic driver routing ต้องเปิด Google Maps Routes API และ billing เพิ่มเติม Functions ใช้ OAuth ของ runtime service account เรียก `Compute Route Matrix` และ `Compute Routes`.
 
 ## 7. Business Rules ที่ทีมเว็บต้องตามให้ตรง
 
@@ -448,8 +441,10 @@ function เหล่านี้มีอยู่ใน `functions/index.js` �
 - archive parent ไม่ได้ถ้ายังมี active `children`
 - archive driver ไม่ได้ถ้ายังผูกกับ active `bus`
 - child ต้องมี active `parent` และ active `school`
-- trip ต้องมี active `school` และ active `bus`
-- child ที่ assign เข้า trip ต้องอยู่ school เดียวกับ trip
+- trip v2 ต้องมี active bus; backend derive และ validate active schools จากเด็กทุกคน
+- เด็กและโรงเรียนที่ไม่มีพิกัดห้ามนำมาคำนวณ route
+- grouped stop progress มีผลกับเด็กทุกคนใน `childIds`
+- ห้าม reorder stop ข้าม phase และ save ต้องใช้ input hash ล่าสุด
 - ห้าม bus ซ้ำใน open trip รอบเดียวกันของ `serviceDateKey`
 - ห้าม child ซ้ำใน open trip รอบเดียวกันของ `serviceDateKey`
 - ตอน archive child / remove child from trip / archive trip ต้อง sync ค่า `tripId`, `busId`, `assignmentStatus`, `hasBoarded`, `hasArrived`
@@ -513,13 +508,13 @@ function เหล่านี้มีอยู่ใน `functions/index.js` �
 ## 8.5 `AdminTripInput`
 
 - `id`
-- `schoolId`
 - `busId`
 - `serviceDate`
 - `round`
 - `scheduledStartAt`
 - `childIds`
-- `stops`
+- `origin`
+- `routePlan`
 
 ## 8.6 Enum values ที่เกี่ยวข้อง
 
@@ -530,9 +525,8 @@ function เหล่านี้มีอยู่ใน `functions/index.js` �
 ## 9. Known Implementation Notes
 
 - mobile admin อ่านข้อมูลทั้งหมดแบบ realtime ผ่าน Firestore `snapshots()`
-- หลาย mutation ของ admin ปัจจุบันทำใน client โดยตรงผ่าน Firestore transaction/set ไม่ได้ผ่าน callable function
-- callable function ที่ mobile ใช้จริงตอนนี้คือ `manageUser`
-- function อื่นมีอยู่แล้วใน backend แต่ยังไม่ใช่ current mobile path
-- เอกสารนี้อธิบาย current contract ของระบบ ไม่ใช่ข้อเสนอ refactor
+- School, Bus และ Trip structural mutations ใช้ callable; realtime reads ยังใช้ Firestore
+- Rules อนุญาต driver แก้เฉพาะ Trip status/current stop/timestamps/stop progress
+- Web/Flutter debounce route calculation 800ms และทิ้ง stale response
+- active legacy trip ใช้ flow เดิมจนจบ; draft/archived legacy trip convert เป็น v2 เมื่อแก้
 - ถ้าทีมเว็บเป็นคนละแอป ให้ยึด Firebase contract ในเอกสารนี้เป็นหลัก มากกว่าวิธีจัด state ใน Flutter
-

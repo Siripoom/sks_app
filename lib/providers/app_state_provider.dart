@@ -16,8 +16,8 @@ class AppStateProvider extends ChangeNotifier {
     this._notificationService, {
     required SharedPreferences preferences,
     required Locale initialLocale,
-  })  : _preferences = preferences,
-        _locale = _normalizeLocale(initialLocale) {
+  }) : _preferences = preferences,
+       _locale = _normalizeLocale(initialLocale) {
     unawaited(_restoreSession());
   }
 
@@ -68,7 +68,9 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   static Locale _normalizeLocale(Locale locale) {
-    return locale.languageCode == 'en' ? const Locale('en') : const Locale('th');
+    return locale.languageCode == 'en'
+        ? const Locale('en')
+        : const Locale('th');
   }
 
   Future<bool> updateCurrentUserProfilePhoto(
@@ -172,6 +174,29 @@ class AppStateProvider extends ChangeNotifier {
     _currentUser = null;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  Future<bool> deleteAccount(String password) async {
+    if (_currentUser == null) return false;
+
+    _isBusy = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _authService.deleteAccount(password: password);
+      _selectedRole = null;
+      _currentUser = null;
+      return true;
+    } on FirebaseAuthException catch (error) {
+      _errorMessage = error.message ?? error.code;
+      return false;
+    } catch (error) {
+      _errorMessage = error.toString();
+      return false;
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
   }
 
   Future<void> _restoreSession() async {

@@ -66,21 +66,32 @@ service cloud.firestore {
 
     match /schools/{docId} {
       allow read: if signedIn();
-      allow write: if isAdmin();
+      // School structure and busLimit are managed by Cloud Functions.
+      allow write: if false;
     }
 
     match /trips/{docId} {
       allow read: if signedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin() ||
+      allow create, delete: if false;
+      allow update: if
+        (
+          isAdmin() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['childIds', 'stops', 'updatedAt'])
+        ) ||
         (
           role() == 'driver' &&
           busIdDriver(resource.data.busId) == referenceId() &&
-          request.resource.data.isArchived == resource.data.isArchived &&
-          request.resource.data.archivedAt == resource.data.archivedAt &&
-          request.resource.data.busId == resource.data.busId
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'status',
+              'currentStopIndex',
+              'stops',
+              'startedAt',
+              'completedAt',
+              'updatedAt'
+            ])
         );
-      allow delete: if isAdmin();
     }
 
     match /parents/{docId} {
@@ -109,16 +120,27 @@ service cloud.firestore {
 
     match /buses/{docId} {
       allow read: if signedIn();
-      allow create: if isAdmin();
-      allow update: if isAdmin() ||
+      // Bus structure, school assignment, and archive state are managed by
+      // Cloud Functions. Admin child/trip flows may only sync childIds.
+      allow create, delete: if false;
+      allow update: if
+        (
+          isAdmin() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['childIds', 'updatedAt'])
+        ) ||
         (
           role() == 'driver' &&
           referenceId() == resource.data.driverId &&
-          request.resource.data.isArchived == resource.data.isArchived &&
-          request.resource.data.archivedAt == resource.data.archivedAt &&
-          request.resource.data.driverId == resource.data.driverId
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'status',
+              'currentLat',
+              'currentLng',
+              'estimatedArrival',
+              'updatedAt'
+            ])
         );
-      allow delete: if isAdmin();
     }
 
     match /children/{docId} {

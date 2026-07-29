@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:sks/models/app_user.dart';
 import 'package:sks/models/parent.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 abstract class IAuthService {
   Future<AppUser?> restoreSession();
@@ -26,14 +27,21 @@ abstract class IAuthService {
     required String phone,
   });
   Future<void> signOut();
+  Future<void> deleteAccount({required String password});
 }
 
 class FirebaseAuthService implements IAuthService {
-  FirebaseAuthService(this._auth, this._firestore, this._storage);
+  FirebaseAuthService(
+    this._auth,
+    this._firestore,
+    this._storage,
+    this._functions,
+  );
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
+  final FirebaseFunctions _functions;
 
   CollectionReference<Map<String, dynamic>> get _appUsers =>
       _firestore.collection('app_users');
@@ -156,6 +164,26 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   Future<void> signOut() => _auth.signOut();
+
+  @override
+  Future<void> deleteAccount({required String password}) async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null || email.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'missing-authentication',
+        message: 'Please sign in again before deleting your account.',
+      );
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
+    await user.reauthenticateWithCredential(credential);
+    await user.getIdToken(true);
+    await _functions.httpsCallable('deleteOwnAccount').call();
+  }
 
   Future<AppUser> _loadAppUser(String uid) async {
     final snapshot = await _appUsers.doc(uid).get();

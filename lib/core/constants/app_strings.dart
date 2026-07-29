@@ -76,7 +76,6 @@ class AppStrings {
   static const String password = 'รหัสผ่าน';
   static const String loginButton = 'เข้าสู่ระบบ';
   static const String loginFailed = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
-  static const String testAccounts = 'บัญชีทดสอบ';
   static const String smartKidsShuttle = 'SmartKids Shuttle';
 
   static const String tabHome = 'หน้าแรก';
@@ -101,6 +100,10 @@ class AppStrings {
   static const String routeNumber = 'สาย';
   static const String goodMorning = 'สวัสดีตอนเช้า! ขับระวังนะ';
   static const String startTrip = 'เริ่มเดินทาง';
+  static const String unableStartTrip =
+      'ไม่สามารถเริ่มเดินทางได้ กรุณาลองอีกครั้ง';
+  static const String startedWithSavedRoute =
+      'เริ่มเดินทางด้วยเส้นทางเดิม เนื่องจากคำนวณเส้นทางใหม่ไม่ได้';
   static const String endTrip = 'จบเดินทาง';
   static const String inTransit = 'กำลังเดินทาง...';
   static const String checkedIn = 'เช็กอินแล้ว';
@@ -143,9 +146,9 @@ class AppStrings {
       'ฉันยอมรับนโยบายความเป็นส่วนตัวและเงื่อนไขการใช้บริการ';
   static const String acceptAndRegister = 'ยอมรับและสมัครสมาชิก';
   static const String privacyPolicyContent =
-      'นโยบายความเป็นส่วนตัวของ SmartKids Shuttle';
+      'SmartKids Shuttle เก็บชื่อ อีเมล เบอร์โทร รูปภาพ ข้อมูลที่อยู่/จุดรับส่ง และตำแหน่งที่จำเป็นสำหรับการจัดการนักเรียน การติดตามรถ และการแจ้งเตือน ข้อมูลใช้เพื่อการทำงานของแอปเท่านั้น ไม่ใช้เพื่อโฆษณาหรือติดตามข้ามแอป ผู้ใช้สามารถลบบัญชีและข้อมูลส่วนตัวที่เกี่ยวข้องได้จากการตั้งค่าบัญชี';
   static const String termsOfServiceContent =
-      'เงื่อนไขการใช้บริการ SmartKids Shuttle';
+      'การใช้ SmartKids Shuttle หมายถึงการยอมรับการใช้ข้อมูลเพื่อจัดการการเดินทางของนักเรียนและการแจ้งเตือนด้านความปลอดภัย ผู้ใช้ต้องรักษารหัสผ่านของตนเองและสามารถหยุดใช้บริการหรือลบบัญชีได้จากการตั้งค่าบัญชี';
 
   static const String mapSection = 'แผนที่';
   static const String todayTrip = 'ทริปวันนี้';
@@ -235,8 +238,7 @@ class AppStrings {
       'This QR does not belong to a student on your route';
   static const String qrStudentNotFound =
       'No student record was found for this QR';
-  static const String unableUpdateBoarding =
-      'Unable to update boarding status';
+  static const String unableUpdateBoarding = 'Unable to update boarding status';
   static const String checkedInSuccess = 'Checked in {name} successfully';
   static const String alreadyCheckedIn = '{name} is already checked in';
   static const String boardingConfirmed = 'Confirmed boarding for {name}';
@@ -284,8 +286,7 @@ class AppStrings {
       'Manage parents, teachers, and drivers';
   static const String manageStudentsSubtitle =
       'Manage child profiles and parent links';
-  static const String manageFleetSubtitle =
-      'Manage buses and bus-driver links';
+  static const String manageFleetSubtitle = 'Manage buses and bus-driver links';
   static const String pendingTripAssignments = 'Pending trip assignments';
   static const String allActiveStudentsAssigned =
       'All active students are assigned.';
@@ -325,10 +326,8 @@ class AppStrings {
   static const String saveAssignment = 'Save assignment';
   static const String createdEntitySuccess = 'Created {entity} successfully.';
   static const String updatedEntitySuccess = 'Updated {entity} successfully.';
-  static const String archivedEntitySuccess =
-      'Archived {entity} successfully.';
-  static const String restoredEntitySuccess =
-      'Restored {entity} successfully.';
+  static const String archivedEntitySuccess = 'Archived {entity} successfully.';
+  static const String restoredEntitySuccess = 'Restored {entity} successfully.';
   static const String removeFromTripSuccess = '{name} removed from trip.';
   static const String tripAssignmentUpdated = 'Trip assignment updated.';
   static const String unableSaveUser = 'Unable to save user.';
@@ -420,4 +419,13 @@ class AppStrings {
   static const String profileUpdatedSuccess = 'อัปเดตโปรไฟล์สำเร็จ';
   static const String unableUpdateProfile = 'ไม่สามารถอัปเดตโปรไฟล์ได้';
   static const String profilePhotoUploadFailed = 'อัปโหลดรูปโปรไฟล์ไม่สำเร็จ';
+  static const String accountSettings = 'การตั้งค่าบัญชี';
+  static const String deleteAccount = 'ลบบัญชี';
+  static const String deleteAccountTitle = 'ลบบัญชีถาวร';
+  static const String deleteAccountMessage =
+      'การลบบัญชีจะลบข้อมูลบัญชีและข้อมูลส่วนตัวที่เกี่ยวข้องทั้งหมด และไม่สามารถย้อนกลับได้';
+  static const String deleteAccountPasswordHint = 'กรอกรหัสผ่านเพื่อยืนยัน';
+  static const String deleteAccountConfirm = 'ยืนยันการลบบัญชี';
+  static const String deleteAccountSuccess = 'ลบบัญชีสำเร็จ';
+  static const String deleteAccountFailed = 'ไม่สามารถลบบัญชีได้';
 }

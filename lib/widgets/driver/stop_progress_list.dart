@@ -115,7 +115,7 @@ class StopProgressList extends StatelessWidget {
                   if (stop.isDone)
                     Text(
                       stop.status == TripStopStatus.pickedUp
-                          ? (isToHome ? 'ส่งแล้ว' : 'รับแล้ว')
+                          ? (stop.action == 'dropoff' ? 'ส่งแล้ว' : 'รับแล้ว')
                           : 'ข้าม',
                       style: GoogleFonts.prompt(
                         fontSize: 11,

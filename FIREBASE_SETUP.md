@@ -13,7 +13,7 @@ This project has been migrated to Firebase-backed services for:
 - Seed script for Firestore data and seeded test accounts
 - Cloud Function source that sends FCM notifications when `notifications` documents are created
 - Android package id updated to `com.sks.aapp`
-- iOS bundle id updated to `com.sks.app`
+- iOS bundle id updated to `com.app.smartkidsshuttle`
 - Android Firebase config installed at `android/app/google-services.json`
 - iOS Firebase config installed at `ios/Runner/GoogleService-Info.plist`
 - Android/iOS runtime values are now wired in `lib/firebase_options.dart`
@@ -21,7 +21,8 @@ This project has been migrated to Firebase-backed services for:
 
 ## What is still needed from Firebase Console / FlutterFire
 
-Android and iOS are now configured with real Firebase app credentials from project `sks-app-d980c`.
+Android and iOS are configured with real Firebase app credentials from project
+`sks-app-d980c`; the iOS Firebase app uses `com.app.smartkidsshuttle`.
 
 Web is still using placeholder `--dart-define` values because no Web app registration / generated FlutterFire config has been added yet.
 

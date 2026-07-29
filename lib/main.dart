@@ -90,6 +90,7 @@ Future<void> main() async {
         FirebaseAuth.instance,
         firestore,
         storage,
+        functions,
       ),
       busService: FirebaseBusService(firestore),
       childService: FirebaseChildService(firestore, storage),
@@ -97,7 +98,7 @@ Future<void> main() async {
       notificationService: notificationService,
       referenceDataService: FirebaseReferenceDataService(firestore),
       adminService: FirebaseAdminService(firestore, functions),
-      tripService: FirebaseTripService(firestore),
+      tripService: FirebaseTripService(firestore, functions),
     );
   } catch (error) {
     startupError = error;
@@ -191,7 +192,9 @@ Future<void> _logAppCheckDebugState(
   );
 
   _appCheckTokenSubscription?.cancel();
-  _appCheckTokenSubscription = FirebaseAppCheck.instance.onTokenChange.listen((token) {
+  _appCheckTokenSubscription = FirebaseAppCheck.instance.onTokenChange.listen((
+    token,
+  ) {
     debugPrint('[AppCheck] onTokenChange: ${token ?? '(null)'}');
   });
 
@@ -320,6 +323,9 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<AppStateProvider>(
         builder: (context, appState, _) => MaterialApp(
+          key: ValueKey<String>(
+            'auth:${appState.currentUser?.id ?? 'signed-out'}',
+          ),
           title: AppLocalizations(appState.locale).tr(AppStrings.appTitle),
           theme: buildAppTheme(),
           locale: appState.locale,

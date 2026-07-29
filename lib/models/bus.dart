@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sks/core/utils/geo_utils.dart';
 
 enum BusStatus { waiting, enRoute, arrived }
 
@@ -102,16 +103,10 @@ class Bus {
       isArchived: map['isArchived'] as bool? ?? false,
       archivedAt: _dateTimeFromMap(map['archivedAt']),
       status: BusStatusX.fromValue(map['status'] as String? ?? 'waiting'),
-      currentLat: _toDouble(map['currentLat']),
-      currentLng: _toDouble(map['currentLng']),
+      currentLat: parseLatitude(map['currentLat']),
+      currentLng: parseLongitude(map['currentLng']),
       estimatedArrival: _dateTimeFromMap(map['estimatedArrival']),
     );
-  }
-
-  static double _toDouble(dynamic value) {
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0;
-    return 0;
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {

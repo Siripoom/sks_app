@@ -78,8 +78,7 @@ class DriverProvider extends ChangeNotifier {
   bool get isTripActive => _activeTrip?.status == TripStatus.active;
   bool get allStopsDone => isTripActive && currentStopIndex >= stops.length;
 
-  int get completedStopsCount =>
-      stops.where((s) => s.isDone).length;
+  int get completedStopsCount => stops.where((s) => s.isDone).length;
 
   Future<void> loadDriverData(String driverId) async {
     _activeTrip = await _tripService.getActiveTripByDriverId(driverId);
@@ -112,25 +111,40 @@ class DriverProvider extends ChangeNotifier {
   // Trip stop workflow
   // ---------------------------------------------------------------------------
 
-  Future<bool> startTrip() async {
-    if (_activeTrip == null || _assignedBus == null) return false;
-    if (_activeTrip!.stops.isEmpty) return false;
+  Future<TripStartResult?> startTrip() async {
+    if (_activeTrip == null || _assignedBus == null) return null;
+    if (_activeTrip!.stops.isEmpty) return null;
 
-    final success = await _tripService.startTrip(_activeTrip!.id);
-    if (!success) return false;
-
-    await _busService.updateBusStatus(_assignedBus!.id, BusStatus.enRoute);
-
-    _activeTrip = _activeTrip!.copyWith(
-      status: TripStatus.active,
-      currentStopIndex: 0,
-      startedAt: DateTime.now(),
+    Position? position;
+    try {
+      position = await _locationService.getCurrentDevicePosition();
+    } catch (error) {
+      debugPrint('Current GPS unavailable, starting with saved route: $error');
+    }
+    final origin = position == null
+        ? null
+        : <String, dynamic>{
+            'lat': position.latitude,
+            'lng': position.longitude,
+            'label': 'Driver current location',
+          };
+    final result = await _tripService.startTrip(
+      _activeTrip!.id,
+      origin: origin,
     );
-    _assignedBus = _assignedBus!.copyWith(status: BusStatus.enRoute);
+
+    _activeTrip = result.trip;
+    _assignedBus = _assignedBus!.copyWith(
+      status: BusStatus.enRoute,
+      currentLat: position?.latitude,
+      currentLng: position?.longitude,
+    );
     _notifiedApproachingChildIds.clear();
 
-    // For toHome: children are already on the bus at school
-    if (_activeTrip!.round == TripRound.toHome) {
+    // Legacy toHome trips start with children already on the bus. Route v2
+    // records school pickup stops explicitly.
+    if (_activeTrip!.routeVersion < 2 &&
+        _activeTrip!.round == TripRound.toHome) {
       for (final child in _assignedChildren) {
         child.hasBoarded = true;
         await _childService.updateChild(child);
@@ -139,14 +153,18 @@ class DriverProvider extends ChangeNotifier {
 
     _startLocationSharing();
 
-    await _notificationService.sendTripStartedNotification(
-      trip: _activeTrip!,
-      bus: _assignedBus!,
-      children: _assignedChildren,
-    );
+    try {
+      await _notificationService.sendTripStartedNotification(
+        trip: _activeTrip!,
+        bus: _assignedBus!,
+        children: _assignedChildren,
+      );
+    } catch (error) {
+      debugPrint('sendTripStartedNotification failed: $error');
+    }
 
     notifyListeners();
-    return true;
+    return result;
   }
 
   Future<bool> markPickedUp() async {
@@ -167,22 +185,33 @@ class DriverProvider extends ChangeNotifier {
       debugPrint('updateStopStatus failed: $e');
     }
 
-    // Mark child boarding status (toHome = drop off, toSchool = pick up)
-    final child = _assignedChildren.where((c) => c.id == stop.childId).firstOrNull;
-    final isToHome = _activeTrip!.round == TripRound.toHome;
-    if (child != null) {
-      child.hasBoarded = !isToHome; // toHome: false (dropped off), toSchool: true (boarded)
+    // Route v2 stops can contain several children at the same home or school.
+    final stopChildren = _assignedChildren
+        .where((child) => stop.effectiveChildIds.contains(child.id))
+        .toList();
+    final isPickup = stop.action == 'pickup';
+    for (final child in stopChildren) {
+      child.hasBoarded = isPickup;
+      child.hasArrived = !isPickup;
       try {
         await _childService.updateChild(child);
       } catch (e) {
         debugPrint('updateChild failed: $e');
       }
-      // Non-blocking notification
-      _notificationService.sendBoardingNotification(
-        child: child,
-        bus: _assignedBus!,
-        trip: _activeTrip!,
-      ).catchError((e) => debugPrint('sendBoardingNotification failed: $e'));
+      final notification = isPickup
+          ? _notificationService.sendBoardingNotification(
+              child: child,
+              bus: _assignedBus!,
+              trip: _activeTrip!,
+            )
+          : _notificationService.sendArrivalNotification(
+              child: child,
+              bus: _assignedBus!,
+              trip: _activeTrip!,
+            );
+      notification.catchError(
+        (e) => debugPrint('send stop notification failed: $e'),
+      );
     }
 
     // Advance to next stop
@@ -225,14 +254,19 @@ class DriverProvider extends ChangeNotifier {
       debugPrint('updateStopStatus (skip) failed: $e');
     }
 
-    final child = _assignedChildren.where((c) => c.id == stop.childId).firstOrNull;
-    if (child != null) {
-      // Non-blocking notification
-      _notificationService.sendChildSkippedNotification(
-        child: child,
-        bus: _assignedBus!,
-        trip: _activeTrip!,
-      ).catchError((e) => debugPrint('sendChildSkippedNotification failed: $e'));
+    final stopChildren = _assignedChildren
+        .where((child) => stop.effectiveChildIds.contains(child.id))
+        .toList();
+    for (final child in stopChildren) {
+      _notificationService
+          .sendChildSkippedNotification(
+            child: child,
+            bus: _assignedBus!,
+            trip: _activeTrip!,
+          )
+          .catchError(
+            (e) => debugPrint('sendChildSkippedNotification failed: $e'),
+          );
     }
 
     final nextIndex = idx + 1;
@@ -243,9 +277,7 @@ class DriverProvider extends ChangeNotifier {
     }
 
     final updatedStops = List<TripStop>.from(_activeTrip!.stops);
-    updatedStops[idx] = stop.copyWith(
-      status: TripStopStatus.skipped,
-    );
+    updatedStops[idx] = stop.copyWith(status: TripStopStatus.skipped);
     _activeTrip = _activeTrip!.copyWith(
       stops: updatedStops,
       currentStopIndex: nextIndex,
@@ -270,7 +302,9 @@ class DriverProvider extends ChangeNotifier {
 
     final isToHome = _activeTrip!.round == TripRound.toHome;
 
-    if (isToHome) {
+    if (_activeTrip!.routeVersion >= 2) {
+      // Child state and notifications are completed at each grouped stop.
+    } else if (isToHome) {
       // toHome: notify for all children who were dropped off (hasBoarded == false means dropped)
       for (final child in _assignedChildren) {
         child.hasArrived = false;
@@ -411,12 +445,7 @@ class DriverProvider extends ChangeNotifier {
     if (stop == null || !isTripActive) return;
     if (_notifiedApproachingChildIds.contains(stop.childId)) return;
 
-    final distanceKm = haversineDistanceKm(
-      busLat,
-      busLng,
-      stop.lat,
-      stop.lng,
-    );
+    final distanceKm = haversineDistanceKm(busLat, busLng, stop.lat, stop.lng);
 
     if (distanceKm < 1.0) {
       _notifiedApproachingChildIds.add(stop.childId);

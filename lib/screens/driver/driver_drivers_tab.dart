@@ -14,6 +14,7 @@ import 'package:sks/services/reference_data_service.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/section_header.dart';
 import 'package:sks/widgets/common/user_avatar.dart';
+import 'package:sks/widgets/common/account_deletion_tile.dart';
 
 class DriverDriversTab extends StatefulWidget {
   final VoidCallback onOpenMessages;
@@ -142,8 +143,9 @@ class _DriverDriversTabState extends State<DriverDriversTab> {
                           runSpacing: 8,
                           children: [
                             ElevatedButton.icon(
-                              onPressed:
-                                  appState.isBusy ? null : _pickProfilePhoto,
+                              onPressed: appState.isBusy
+                                  ? null
+                                  : _pickProfilePhoto,
                               icon: const Icon(Icons.photo_library_outlined),
                               label: Text(
                                 context.tr(AppStrings.changeProfilePhoto),
@@ -175,9 +177,7 @@ class _DriverDriversTabState extends State<DriverDriversTab> {
                                       );
                                     },
                               icon: const Icon(Icons.edit_outlined),
-                              label: Text(
-                                context.tr(AppStrings.editProfile),
-                              ),
+                              label: Text(context.tr(AppStrings.editProfile)),
                             ),
                           ],
                         ),
@@ -226,6 +226,8 @@ class _DriverDriversTabState extends State<DriverDriversTab> {
                             );
                           },
                         ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        const AccountDeletionTile(),
                       ],
                     ),
                   ),

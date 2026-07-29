@@ -35,7 +35,9 @@ extension TripStatusX on TripStatus {
 
 class Trip {
   final String id;
+  @Deprecated('Use schoolIds')
   final String schoolId;
+  final List<String> schoolIds;
   final String busId;
   final DateTime serviceDate;
   final TripRound round;
@@ -50,10 +52,14 @@ class Trip {
   final DateTime? completedAt;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int routeVersion;
+  final Map<String, dynamic>? origin;
+  final Map<String, dynamic>? routePlan;
 
   const Trip({
     required this.id,
-    required this.schoolId,
+    this.schoolId = '',
+    this.schoolIds = const [],
     required this.busId,
     required this.serviceDate,
     required this.round,
@@ -68,7 +74,14 @@ class Trip {
     this.completedAt,
     this.createdAt,
     this.updatedAt,
+    this.routeVersion = 1,
+    this.origin,
+    this.routePlan,
   });
+
+  List<String> get effectiveSchoolIds => schoolIds.isNotEmpty
+      ? schoolIds
+      : (schoolId.isEmpty ? const [] : [schoolId]);
 
   bool get isOpen =>
       !isArchived &&
@@ -78,6 +91,7 @@ class Trip {
   Trip copyWith({
     String? id,
     String? schoolId,
+    List<String>? schoolIds,
     String? busId,
     DateTime? serviceDate,
     TripRound? round,
@@ -95,10 +109,14 @@ class Trip {
     bool clearCompletedAt = false,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? routeVersion,
+    Map<String, dynamic>? origin,
+    Map<String, dynamic>? routePlan,
   }) {
     return Trip(
       id: id ?? this.id,
       schoolId: schoolId ?? this.schoolId,
+      schoolIds: schoolIds ?? this.schoolIds,
       busId: busId ?? this.busId,
       serviceDate: serviceDate ?? this.serviceDate,
       round: round ?? this.round,
@@ -115,12 +133,15 @@ class Trip {
       completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      routeVersion: routeVersion ?? this.routeVersion,
+      origin: origin ?? this.origin,
+      routePlan: routePlan ?? this.routePlan,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'schoolId': schoolId,
+      'schoolIds': effectiveSchoolIds,
       'busId': busId,
       'serviceDate': serviceDate,
       'round': round.value,
@@ -135,6 +156,9 @@ class Trip {
       'completedAt': completedAt,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'routeVersion': routeVersion,
+      'origin': origin,
+      'routePlan': routePlan,
     };
   }
 
@@ -142,9 +166,9 @@ class Trip {
     return Trip(
       id: id,
       schoolId: map['schoolId'] as String? ?? '',
+      schoolIds: _schoolIdsFromMap(map),
       busId: map['busId'] as String? ?? '',
-      serviceDate:
-          _dateTimeFromMap(map['serviceDate']) ?? DateTime.now(),
+      serviceDate: _dateTimeFromMap(map['serviceDate']) ?? DateTime.now(),
       round: TripRoundX.fromValue(map['round'] as String? ?? 'toSchool'),
       scheduledStartAt: _dateTimeFromMap(map['scheduledStartAt']),
       childIds: List<String>.from(map['childIds'] as List? ?? const []),
@@ -159,6 +183,13 @@ class Trip {
       completedAt: _dateTimeFromMap(map['completedAt']),
       createdAt: _dateTimeFromMap(map['createdAt']),
       updatedAt: _dateTimeFromMap(map['updatedAt']),
+      routeVersion: map['routeVersion'] as int? ?? 1,
+      origin: map['origin'] is Map
+          ? Map<String, dynamic>.from(map['origin'] as Map)
+          : null,
+      routePlan: map['routePlan'] is Map
+          ? Map<String, dynamic>.from(map['routePlan'] as Map)
+          : null,
     );
   }
 
@@ -173,5 +204,12 @@ class Trip {
       return DateTime.tryParse(value);
     }
     return null;
+  }
+
+  static List<String> _schoolIdsFromMap(Map<String, dynamic> map) {
+    final values = List<String>.from(map['schoolIds'] as List? ?? const []);
+    if (values.isNotEmpty) return values;
+    final legacy = map['schoolId'] as String? ?? '';
+    return legacy.isEmpty ? const [] : [legacy];
   }
 }

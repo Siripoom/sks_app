@@ -10,6 +10,7 @@ class School {
   final String morningDropoff;
   final String eveningPickup;
   final String eveningDropoff;
+  final int? busLimit;
   final bool isArchived;
   final DateTime? archivedAt;
 
@@ -23,6 +24,7 @@ class School {
     this.morningDropoff = '',
     this.eveningPickup = '',
     this.eveningDropoff = '',
+    this.busLimit,
     this.isArchived = false,
     this.archivedAt,
   });
@@ -37,6 +39,7 @@ class School {
     String? morningDropoff,
     String? eveningPickup,
     String? eveningDropoff,
+    int? busLimit,
     bool? isArchived,
     DateTime? archivedAt,
   }) {
@@ -50,6 +53,7 @@ class School {
       morningDropoff: morningDropoff ?? this.morningDropoff,
       eveningPickup: eveningPickup ?? this.eveningPickup,
       eveningDropoff: eveningDropoff ?? this.eveningDropoff,
+      busLimit: busLimit ?? this.busLimit,
       isArchived: isArchived ?? this.isArchived,
       archivedAt: archivedAt ?? this.archivedAt,
     );
@@ -65,6 +69,7 @@ class School {
       'morningDropoff': morningDropoff,
       'eveningPickup': eveningPickup,
       'eveningDropoff': eveningDropoff,
+      'busLimit': busLimit,
       'isArchived': isArchived,
       'archivedAt': archivedAt,
     };
@@ -81,6 +86,7 @@ class School {
       morningDropoff: map['morningDropoff'] as String? ?? '',
       eveningPickup: map['eveningPickup'] as String? ?? '',
       eveningDropoff: map['eveningDropoff'] as String? ?? '',
+      busLimit: _toInt(map['busLimit']),
       isArchived: map['isArchived'] as bool? ?? false,
       archivedAt: _dateTimeFromMap(map['archivedAt']),
     );
@@ -90,6 +96,18 @@ class School {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0;
     return 0;
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value is int && value >= 0) return value;
+    if (value is num && value >= 0 && value == value.roundToDouble()) {
+      return value.toInt();
+    }
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null && parsed >= 0) return parsed;
+    }
+    return null;
   }
 
   static DateTime? _dateTimeFromMap(dynamic value) {

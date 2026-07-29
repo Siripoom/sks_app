@@ -13,6 +13,7 @@ import 'package:sks/services/reference_data_service.dart';
 import 'package:sks/widgets/common/app_surface_card.dart';
 import 'package:sks/widgets/common/section_header.dart';
 import 'package:sks/widgets/common/user_avatar.dart';
+import 'package:sks/widgets/common/account_deletion_tile.dart';
 
 class ParentSettingsTab extends StatefulWidget {
   final VoidCallback? onNotificationTap;
@@ -90,9 +91,7 @@ class _ParentSettingsTabState extends State<ParentSettingsTab> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => EditProfileScreen(
-          currentPhone: parent?.phone ?? '',
-        ),
+        builder: (_) => EditProfileScreen(currentPhone: parent?.phone ?? ''),
       ),
     );
   }
@@ -154,8 +153,7 @@ class _ParentSettingsTabState extends State<ParentSettingsTab> {
                     ),
                     if ((user?.profilePhotoPath ?? '').isNotEmpty)
                       TextButton.icon(
-                        onPressed:
-                            appState.isBusy ? null : _removeProfilePhoto,
+                        onPressed: appState.isBusy ? null : _removeProfilePhoto,
                         icon: const Icon(Icons.delete_outline),
                         label: Text(context.tr(AppStrings.removeProfilePhoto)),
                       ),
@@ -219,6 +217,8 @@ class _ParentSettingsTabState extends State<ParentSettingsTab> {
                     );
                   },
                 ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                const AccountDeletionTile(),
               ],
             ),
           ),

@@ -127,19 +127,49 @@ class AdminProvider extends ChangeNotifier {
 
   List<Teacher> get visibleTeachers => _selectedSchoolId.isEmpty
       ? _teachers
-      : _teachers.where((teacher) => teacher.schoolId == _selectedSchoolId).toList();
+      : _teachers
+            .where((teacher) => teacher.schoolId == _selectedSchoolId)
+            .toList();
 
   List<Child> get visibleChildren => _selectedSchoolId.isEmpty
       ? _children
-      : _children.where((child) => child.schoolId == _selectedSchoolId).toList();
+      : _children
+            .where((child) => child.schoolId == _selectedSchoolId)
+            .toList();
 
   List<Trip> get visibleTrips => _selectedSchoolId.isEmpty
       ? _trips
-      : _trips.where((trip) => trip.schoolId == _selectedSchoolId).toList();
+      : _trips
+            .where(
+              (trip) => trip.effectiveSchoolIds.contains(_selectedSchoolId),
+            )
+            .toList();
 
   List<Child> get unassignedChildren => visibleChildren
-      .where((child) => !child.isArchived && child.assignmentStatus == ChildAssignmentStatus.pending)
+      .where(
+        (child) =>
+            !child.isArchived &&
+            child.assignmentStatus == ChildAssignmentStatus.pending,
+      )
       .toList();
+
+  int activeBusCountForSchool(String schoolId) {
+    return _buses
+        .where((bus) => bus.schoolId == schoolId && !bus.isArchived)
+        .length;
+  }
+
+  bool schoolCanAcceptBus(School school, {Bus? currentBus}) {
+    final limit = school.busLimit;
+    if (limit == null || currentBus?.isArchived == true) return true;
+    var used = activeBusCountForSchool(school.id);
+    if (currentBus != null &&
+        !currentBus.isArchived &&
+        currentBus.schoolId == school.id) {
+      used -= 1;
+    }
+    return used < limit;
+  }
 
   Future<bool> runGuarded(Future<void> Function() action) async {
     _errorMessage = null;
@@ -184,7 +214,9 @@ class AdminProvider extends ChangeNotifier {
   }
 
   Future<bool> setSchoolArchived(String schoolId, bool archived) {
-    return runGuarded(() => _adminService.setSchoolArchived(schoolId, archived));
+    return runGuarded(
+      () => _adminService.setSchoolArchived(schoolId, archived),
+    );
   }
 
   Future<bool> saveBus(AdminBusInput input) {
@@ -192,7 +224,25 @@ class AdminProvider extends ChangeNotifier {
   }
 
   Future<bool> setBusArchived(String busId, bool archived) {
-    return runGuarded(() => _adminService.setBusArchived(busId, archived));
+    return runGuarded(() async {
+      if (!archived) {
+        final bus = busById(busId);
+        final school = bus == null ? null : schoolById(bus.schoolId);
+        if (bus == null || school == null || school.isArchived) {
+          throw Exception(
+            'Edit the bus and select an active school before restoring it.',
+          );
+        }
+        if (!schoolCanAcceptBus(school)) {
+          final used = activeBusCountForSchool(school.id);
+          throw Exception(
+            '${school.name} has reached its bus limit '
+            '($used/${school.busLimit}).',
+          );
+        }
+      }
+      await _adminService.setBusArchived(busId, archived);
+    });
   }
 
   Future<bool> saveChild(AdminChildInput input) {
@@ -205,6 +255,32 @@ class AdminProvider extends ChangeNotifier {
 
   Future<bool> saveTrip(AdminTripInput input) {
     return runGuarded(() => _adminService.saveTrip(input));
+  }
+
+  Future<Map<String, dynamic>?> calculateTripRoute({
+    String? tripId,
+    required String busId,
+    required DateTime serviceDate,
+    required TripRound round,
+    required DateTime? scheduledStartAt,
+    required List<String> childIds,
+    required Map<String, dynamic> origin,
+    bool manual = false,
+  }) async {
+    Map<String, dynamic>? result;
+    final ok = await runGuarded(() async {
+      result = await _adminService.calculateTripRoute(
+        tripId: tripId,
+        busId: busId,
+        serviceDate: serviceDate,
+        round: round,
+        scheduledStartAt: scheduledStartAt,
+        childIds: childIds,
+        origin: origin,
+        manual: manual,
+      );
+    });
+    return ok ? result : null;
   }
 
   Future<bool> setTripArchived(String tripId, bool archived) {

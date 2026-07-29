@@ -319,7 +319,15 @@ class _FakeTripService implements ITripService {
   Future<bool> updateTripStatus(String tripId, TripStatus status) async => true;
 
   @override
-  Future<bool> startTrip(String tripId) async => true;
+  Future<TripStartResult> startTrip(
+    String tripId, {
+    Map<String, dynamic>? origin,
+  }) async => TripStartResult(
+    trip: trips.firstWhere((trip) => trip.id == tripId),
+    routeRecalculated: false,
+    fallbackReason: '',
+    alreadyActive: false,
+  );
 
   @override
   Future<bool> updateCurrentStopIndex(String tripId, int index) async => true;

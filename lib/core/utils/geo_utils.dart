@@ -4,15 +4,37 @@ const double _earthRadiusKm = 6371.0;
 const double _roadFactor = 1.4;
 const double _averageSpeedKmh = 30.0;
 
-double haversineDistanceKm(
-  double lat1,
-  double lng1,
-  double lat2,
-  double lng2,
-) {
+double parseLatitude(Object? value) =>
+    _parseCoordinate(value, minimum: -90, maximum: 90);
+
+double parseLongitude(Object? value) =>
+    _parseCoordinate(value, minimum: -180, maximum: 180);
+
+double _parseCoordinate(
+  Object? value, {
+  required double minimum,
+  required double maximum,
+}) {
+  final double? coordinate = switch (value) {
+    num number => number.toDouble(),
+    String text => double.tryParse(text.trim()),
+    _ => null,
+  };
+
+  if (coordinate == null ||
+      !coordinate.isFinite ||
+      coordinate < minimum ||
+      coordinate > maximum) {
+    return 0;
+  }
+  return coordinate;
+}
+
+double haversineDistanceKm(double lat1, double lng1, double lat2, double lng2) {
   final dLat = _toRadians(lat2 - lat1);
   final dLng = _toRadians(lng2 - lng1);
-  final a = sin(dLat / 2) * sin(dLat / 2) +
+  final a =
+      sin(dLat / 2) * sin(dLat / 2) +
       cos(_toRadians(lat1)) *
           cos(_toRadians(lat2)) *
           sin(dLng / 2) *
@@ -28,12 +50,7 @@ int estimateMinutes(double straightLineKm) {
   return minutes.ceil();
 }
 
-int estimateMinutesBetween(
-  double lat1,
-  double lng1,
-  double lat2,
-  double lng2,
-) {
+int estimateMinutesBetween(double lat1, double lng1, double lat2, double lng2) {
   return estimateMinutes(haversineDistanceKm(lat1, lng1, lat2, lng2));
 }
 

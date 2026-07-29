@@ -1,6 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:sks/models/trip.dart';
 import 'package:sks/models/trip_stop.dart';
+
+class TripStartResult {
+  const TripStartResult({
+    required this.trip,
+    required this.routeRecalculated,
+    required this.fallbackReason,
+    required this.alreadyActive,
+  });
+
+  final Trip trip;
+  final bool routeRecalculated;
+  final String fallbackReason;
+  final bool alreadyActive;
+
+  bool get shouldWarnAboutSavedRoute =>
+      fallbackReason == 'locationUnavailable' ||
+      fallbackReason == 'routeCalculationFailed';
+}
 
 abstract class ITripService {
   Stream<List<Trip>> watchTripsBySchoolId(String schoolId);
@@ -10,7 +29,10 @@ abstract class ITripService {
   Future<Trip?> getActiveTripByBusId(String busId);
   Future<Trip?> getActiveTripByDriverId(String driverId);
   Future<bool> updateTripStatus(String tripId, TripStatus status);
-  Future<bool> startTrip(String tripId);
+  Future<TripStartResult> startTrip(
+    String tripId, {
+    Map<String, dynamic>? origin,
+  });
   Future<bool> updateCurrentStopIndex(String tripId, int index);
   Future<bool> updateStopStatus(
     String tripId,
@@ -22,9 +44,10 @@ abstract class ITripService {
 }
 
 class FirebaseTripService implements ITripService {
-  FirebaseTripService(this._firestore);
+  FirebaseTripService(this._firestore, this._functions);
 
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
   CollectionReference<Map<String, dynamic>> get _trips =>
       _firestore.collection('trips');
@@ -37,12 +60,10 @@ class FirebaseTripService implements ITripService {
     if (schoolId.trim().isEmpty) {
       return watchAllTrips();
     }
-    return _trips.where('schoolId', isEqualTo: schoolId).snapshots().map((
-      snapshot,
-    ) {
+    return _trips.snapshots().map((snapshot) {
       final trips = _activeTrips(
         snapshot.docs.map((doc) => Trip.fromMap(doc.id, doc.data())),
-      ).toList();
+      ).where((trip) => trip.effectiveSchoolIds.contains(schoolId)).toList();
       trips.sort((a, b) => b.serviceDate.compareTo(a.serviceDate));
       return trips;
     });
@@ -92,20 +113,24 @@ class FirebaseTripService implements ITripService {
   @override
   Future<Trip?> getActiveTripByBusId(String busId) async {
     final snapshot = await _trips.where('busId', isEqualTo: busId).get();
-    final trips = _activeTrips(
-      snapshot.docs.map((doc) => Trip.fromMap(doc.id, doc.data())),
-    ).where((trip) =>
-        trip.status == TripStatus.active ||
-        trip.status == TripStatus.draft,
-    ).toList()
-      ..sort((a, b) {
-        // active trips first, then draft
-        if (a.status != b.status) {
-          if (a.status == TripStatus.active) return -1;
-          if (b.status == TripStatus.active) return 1;
-        }
-        return b.serviceDate.compareTo(a.serviceDate);
-      });
+    final trips =
+        _activeTrips(
+              snapshot.docs.map((doc) => Trip.fromMap(doc.id, doc.data())),
+            )
+            .where(
+              (trip) =>
+                  trip.status == TripStatus.active ||
+                  trip.status == TripStatus.draft,
+            )
+            .toList()
+          ..sort((a, b) {
+            // active trips first, then draft
+            if (a.status != b.status) {
+              if (a.status == TripStatus.active) return -1;
+              if (b.status == TripStatus.active) return 1;
+            }
+            return b.serviceDate.compareTo(a.serviceDate);
+          });
     return trips.isEmpty ? null : trips.first;
   }
 
@@ -132,14 +157,25 @@ class FirebaseTripService implements ITripService {
   }
 
   @override
-  Future<bool> startTrip(String tripId) async {
-    await _trips.doc(tripId).set({
-      'status': TripStatus.active.value,
-      'currentStopIndex': 0,
-      'startedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    return true;
+  Future<TripStartResult> startTrip(
+    String tripId, {
+    Map<String, dynamic>? origin,
+  }) async {
+    final response = await _functions.httpsCallable('startDriverTrip').call({
+      'tripId': tripId,
+      'origin': origin,
+    });
+    final data = Map<String, dynamic>.from(response.data as Map);
+    final trip = await getTripById(tripId);
+    if (trip == null) {
+      throw StateError('Started trip could not be loaded.');
+    }
+    return TripStartResult(
+      trip: trip,
+      routeRecalculated: data['routeRecalculated'] == true,
+      fallbackReason: data['fallbackReason'] as String? ?? '',
+      alreadyActive: data['alreadyActive'] == true,
+    );
   }
 
   @override
@@ -161,9 +197,7 @@ class FirebaseTripService implements ITripService {
     final data = doc.data();
     if (data == null) return false;
 
-    final stops = List<Map<String, dynamic>>.from(
-      data['stops'] as List? ?? [],
-    );
+    final stops = List<Map<String, dynamic>>.from(data['stops'] as List? ?? []);
     if (stopIndex < 0 || stopIndex >= stops.length) return false;
 
     stops[stopIndex]['status'] = status.value;

@@ -5,13 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:sks/core/constants/app_colors.dart';
 import 'package:sks/core/constants/app_strings.dart';
 import 'package:sks/core/localization/app_localizations.dart';
-import 'package:sks/models/app_user.dart';
 import 'package:sks/providers/app_state_provider.dart';
-import 'package:sks/screens/admin/admin_main_screen.dart';
-import 'package:sks/screens/driver/driver_main_screen.dart';
 import 'package:sks/screens/login/register_screen.dart';
-import 'package:sks/screens/parent/parent_main_screen.dart';
-import 'package:sks/screens/teacher/teacher_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _showTestAccounts = false;
   bool _obscurePassword = true;
 
   AnimationController? _introController;
@@ -80,9 +74,7 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
-    if (success) {
-      _navigateToRoleScreen(appState.selectedRole!);
-    } else {
+    if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -93,30 +85,6 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       );
     }
-  }
-
-  void _navigateToRoleScreen(UserRole role) {
-    Widget screen;
-    switch (role) {
-      case UserRole.parent:
-        screen = const ParentMainScreen();
-      case UserRole.teacher:
-        screen = const TeacherDashboardScreen();
-      case UserRole.driver:
-        screen = const DriverMainScreen();
-      case UserRole.admin:
-        screen = const AdminMainScreen();
-    }
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => screen),
-    );
-  }
-
-  void _fillCredentials(String email) {
-    _emailController.text = email;
-    _passwordController.text = '123456';
-    setState(() => _showTestAccounts = false);
   }
 
   @override
@@ -211,8 +179,6 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      _buildTestAccountsPanel(),
                     ],
                   ),
                 ),
@@ -455,132 +421,6 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ),
         const SizedBox(height: 10),
-      ],
-    );
-  }
-
-  Widget _buildTestAccountsPanel() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => setState(() => _showTestAccounts = !_showTestAccounts),
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(
-                    HugeIcons.strokeRoundedTestTube,
-                    color: AppColors.primary,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      context.tr(AppStrings.testAccounts),
-                      style: GoogleFonts.prompt(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _showTestAccounts
-                        ? HugeIcons.strokeRoundedArrowUp01
-                        : HugeIcons.strokeRoundedArrowDown01,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_showTestAccounts) ...[
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildAccountGroup(context.tr(AppStrings.roleParent), [
-                    'parent1@sks.com',
-                    'parent2@sks.com',
-                  ]),
-                  const SizedBox(height: 10),
-                  _buildAccountGroup(context.tr(AppStrings.roleTeacher), [
-                    'teacher1@sks.com',
-                    'teacher2@sks.com',
-                  ]),
-                  const SizedBox(height: 10),
-                  _buildAccountGroup(context.tr(AppStrings.roleDriver), [
-                    'driver1@sks.com',
-                    'driver2@sks.com',
-                  ]),
-                  const SizedBox(height: 10),
-                  _buildAccountGroup(
-                    context.tr(AppStrings.roleAdmin),
-                    ['admin@sks.com'],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${context.tr(AppStrings.password)}: 123456',
-                    style: GoogleFonts.prompt(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAccountGroup(String role, List<String> emails) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          role,
-          style: GoogleFonts.prompt(
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 2),
-        ...emails.map(
-          (email) => GestureDetector(
-            onTap: () => _fillCredentials(email),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                email,
-                style: GoogleFonts.prompt(
-                  fontSize: 12,
-                  color: AppColors.accentBlue,
-                  decoration: TextDecoration.underline,
-                  decorationColor: AppColors.accentBlue.withValues(alpha: 0.3),
-                ),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }

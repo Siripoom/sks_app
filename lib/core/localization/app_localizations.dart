@@ -105,7 +105,6 @@ class AppLocalizations {
     AppStrings.password: 'Password',
     AppStrings.loginButton: 'Log in',
     AppStrings.loginFailed: 'Incorrect email or password',
-    AppStrings.testAccounts: 'Test accounts',
     AppStrings.smartKidsShuttle: 'SmartKids Shuttle',
     AppStrings.tabHome: 'Home',
     AppStrings.tabSchedule: 'Schedule',
@@ -128,6 +127,9 @@ class AppLocalizations {
     AppStrings.routeNumber: 'Route',
     AppStrings.goodMorning: 'Good morning! Drive safely.',
     AppStrings.startTrip: 'Start trip',
+    AppStrings.unableStartTrip: 'Unable to start the trip. Please try again.',
+    AppStrings.startedWithSavedRoute:
+        'Trip started with the saved route because recalculation was unavailable.',
     AppStrings.endTrip: 'End trip',
     AppStrings.inTransit: 'In transit...',
     AppStrings.checkedIn: 'Checked in',
@@ -164,8 +166,19 @@ class AppLocalizations {
     AppStrings.termsOfServiceTitle: 'Terms of service',
     AppStrings.acceptTerms: 'I accept the privacy policy and terms of service',
     AppStrings.acceptAndRegister: 'Accept and register',
-    AppStrings.privacyPolicyContent: 'SmartKids Shuttle privacy policy',
-    AppStrings.termsOfServiceContent: 'SmartKids Shuttle terms of service',
+    AppStrings.privacyPolicyContent:
+        'SmartKids Shuttle collects names, email addresses, phone numbers, photos, addresses/pickup points, and location data needed for student transport, bus tracking, and notifications. Data is used for app functionality only, not advertising or cross-app tracking. Users can delete their account and associated personal data from Account settings.',
+    AppStrings.termsOfServiceContent:
+        'Using SmartKids Shuttle means accepting the use of information needed to coordinate student transportation and safety notifications. Keep your password secure. You can stop using the service or delete your account from Account settings.',
+    AppStrings.accountSettings: 'Account settings',
+    AppStrings.deleteAccount: 'Delete account',
+    AppStrings.deleteAccountTitle: 'Permanently delete account',
+    AppStrings.deleteAccountMessage:
+        'This permanently deletes your account and associated personal data. This action cannot be undone.',
+    AppStrings.deleteAccountPasswordHint: 'Enter your password to confirm',
+    AppStrings.deleteAccountConfirm: 'Confirm account deletion',
+    AppStrings.deleteAccountSuccess: 'Account deleted',
+    AppStrings.deleteAccountFailed: 'Unable to delete account',
     AppStrings.mapSection: 'Map',
     AppStrings.todayTrip: "Today's trip",
     AppStrings.studentStatus: 'Student status',
@@ -305,10 +318,8 @@ class AppLocalizations {
     AppStrings.archivedRecords: 'ข้อมูลที่เก็บถาวร',
     AppStrings.assignedStudentsLabel: 'นักเรียนที่ถูกจัดทริปแล้ว',
     AppStrings.managePeopleSubtitle: 'จัดการผู้ปกครอง ครู และคนขับ',
-    AppStrings.manageStudentsSubtitle:
-        'จัดการข้อมูลนักเรียนและผู้ปกครอง',
-    AppStrings.manageFleetSubtitle:
-        'จัดการรถและการผูกคนขับกับรถ',
+    AppStrings.manageStudentsSubtitle: 'จัดการข้อมูลนักเรียนและผู้ปกครอง',
+    AppStrings.manageFleetSubtitle: 'จัดการรถและการผูกคนขับกับรถ',
     AppStrings.pendingTripAssignments: 'นักเรียนที่รอจัดทริป',
     AppStrings.allActiveStudentsAssigned:
         'นักเรียนที่ยังใช้งานอยู่ถูกจัดทริปครบแล้ว',
@@ -357,8 +368,7 @@ class AppLocalizations {
     AppStrings.unableSaveBus: 'ไม่สามารถบันทึกข้อมูลรถได้',
     AppStrings.unableAssignChildToTrip: 'ไม่สามารถจัดทริปให้นักเรียนได้',
     AppStrings.unableRemoveChildFromTrip: 'ไม่สามารถนำเด็กออกจากทริปได้',
-    AppStrings.unableUpdateArchiveState:
-        'ไม่สามารถอัปเดตสถานะการเก็บถาวรได้',
+    AppStrings.unableUpdateArchiveState: 'ไม่สามารถอัปเดตสถานะการเก็บถาวรได้',
     AppStrings.unableUpdateStudentArchiveState:
         'ไม่สามารถอัปเดตสถานะเก็บถาวรของนักเรียนได้',
     AppStrings.unableUpdateBusArchiveState:
