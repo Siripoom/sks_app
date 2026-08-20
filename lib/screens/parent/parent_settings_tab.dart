@@ -257,7 +257,7 @@ class _ParentSettingsTabState extends State<ParentSettingsTab> {
               ),
             ),
           ),
-          const SizedBox(height: 90),
+          SizedBox(height: 92 + MediaQuery.of(context).padding.bottom + 16),
         ],
       ),
     );

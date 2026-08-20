@@ -7,7 +7,15 @@ import { getMessaging } from 'firebase-admin/messaging';
 import { getStorage } from 'firebase-admin/storage';
 import { createHash } from 'node:crypto';
 import { GoogleAuth } from 'google-auth-library';
-import { greedyStopOrder } from './route_planning.js';
+import {
+  classifyRouteApiError,
+  classifyRouteNetworkError,
+  formatRouteTimestamp,
+  greedyStopOrder,
+  orderStopsFromRouteVisits,
+  routeOptimizationPath,
+} from './route_planning.js';
+import { buildTripDeletionPlan } from './trip_cleanup.js';
 
 initializeApp();
 
@@ -127,6 +135,7 @@ export const manageTrip = onCall({ region: REGION, enforceAppCheck: false }, asy
   if (action === 'create' || action === 'update') return saveTrip(request.data);
   if (action === 'archive') return setTripArchived(request.data.id, true);
   if (action === 'restore') return setTripArchived(request.data.id, false);
+  if (action === 'delete') return deleteTrip(request.data.id);
   if (action === 'setStatus') return setTripStatus(request.data.id, request.data.status);
   throw new HttpsError('invalid-argument', 'Unsupported trip action.');
 });
@@ -1328,8 +1337,8 @@ async function optimizeRoutePhase(stops, origin, scheduledStartAt) {
     populateTransitionPolylines: false,
     considerRoadTraffic: true,
     model: {
-      globalStartTime: start.toISOString(),
-      globalEndTime: end.toISOString(),
+      globalStartTime: formatRouteTimestamp(start),
+      globalEndTime: formatRouteTimestamp(end),
       shipments: stops.map((stop) => ({
         label: stop.id,
         deliveries: [{
@@ -1356,7 +1365,7 @@ async function optimizeRoutePhase(stops, origin, scheduledStartAt) {
   let response;
   try {
     response = await fetch(
-      `https://routeoptimization.googleapis.com/v1/projects/${projectId}/locations/global:optimizeTours`,
+      `https://routeoptimization.googleapis.com${routeOptimizationPath(projectId)}`,
       {
         method: 'POST',
         headers: {
@@ -1368,23 +1377,28 @@ async function optimizeRoutePhase(stops, origin, scheduledStartAt) {
       },
     );
   } catch (error) {
+    const failure = classifyRouteNetworkError(error?.name);
+    console.error('Route Optimization network failure', failure.diagnostic);
     throw new HttpsError(
-      'unavailable',
-      error?.name === 'AbortError'
-        ? 'Route calculation timed out.'
-        : 'Route calculation is temporarily unavailable.',
+      failure.code,
+      failure.message,
     );
   } finally {
     clearTimeout(timeout);
   }
   if (!response.ok) {
-    const details = await response.text();
-    console.error('Route Optimization API error', response.status, details);
+    const responseText = await response.text();
+    let payload = {};
+    try {
+      payload = JSON.parse(responseText);
+    } catch {
+      // Keep unparseable upstream responses out of logs and client errors.
+    }
+    const failure = classifyRouteApiError(response.status, payload);
+    console.error('Route Optimization API failure', failure.diagnostic);
     throw new HttpsError(
-      response.status === 429 ? 'resource-exhausted' : 'unavailable',
-      response.status === 429
-        ? 'Route calculation quota has been reached.'
-        : 'Google could not calculate this route.',
+      failure.code,
+      failure.message,
     );
   }
   const payload = await response.json();
@@ -1392,15 +1406,23 @@ async function optimizeRoutePhase(stops, origin, scheduledStartAt) {
   if (!route || payload.skippedShipments?.length) {
     throw new HttpsError('failed-precondition', 'No feasible route was found.');
   }
-  const ordered = (route.visits || []).map((visit) => {
-    const stop = stops[visit.shipmentIndex];
-    if (!stop) {
-      throw new HttpsError('internal', 'Google returned an invalid stop order.');
+  let ordered;
+  try {
+    ordered = orderStopsFromRouteVisits(stops, route.visits || []);
+  } catch (error) {
+    const diagnostic = error?.diagnostic || {
+      reason: 'INVALID_VISIT_ORDER',
+      stopCount: stops.length,
+      visitCount: Array.isArray(route.visits) ? route.visits.length : 0,
+    };
+    console.error('Route Optimization invalid stop order', diagnostic);
+    if (error?.reason === 'OMITTED_STOP') {
+      throw new HttpsError(
+        'failed-precondition',
+        'The optimized route omitted a stop.',
+      );
     }
-    return stop;
-  });
-  if (ordered.length !== stops.length) {
-    throw new HttpsError('failed-precondition', 'The optimized route omitted a stop.');
+    throw new HttpsError('internal', 'Google returned an invalid stop order.');
   }
   return {
     stops: ordered,
@@ -1578,6 +1600,94 @@ async function setTripArchived(tripId, archived) {
     }, { merge: true });
   });
   await Promise.all([...touchedParentIds].filter(Boolean).map((parentId) => syncParentSchoolIds(parentId)));
+  return { ok: true };
+}
+
+async function deleteTrip(tripId) {
+  if (!tripId) throw new HttpsError('invalid-argument', 'Missing trip id.');
+
+  await db.runTransaction(async (tx) => {
+    const tripRef = db.collection('trips').doc(tripId);
+    const tripSnap = await tx.get(tripRef);
+    if (!tripSnap.exists) throw new HttpsError('not-found', 'Trip not found.');
+
+    const trip = tripSnap.data() || {};
+    const listedChildIds = uniqueStrings(trip.childIds || []);
+    const linkedChildrenQuery = db.collection('children').where('tripId', '==', tripId);
+    const linkedChildrenSnap = await tx.get(linkedChildrenQuery);
+    const childSnaps = new Map(
+      linkedChildrenSnap.docs.map((childSnap) => [childSnap.id, childSnap]),
+    );
+
+    for (const childId of listedChildIds) {
+      if (childSnaps.has(childId)) continue;
+      const childSnap = await tx.get(db.collection('children').doc(childId));
+      if (childSnap.exists) childSnaps.set(childId, childSnap);
+    }
+
+    const plan = buildTripDeletionPlan({
+      tripId,
+      trip,
+      children: [...childSnaps.values()].map((childSnap) => ({
+        id: childSnap.id,
+        ...childSnap.data(),
+      })),
+    });
+    const busIds = uniqueStrings([
+      ...plan.busChildRemovals.map((item) => item.busId),
+      plan.activeBusId,
+    ]);
+    const busSnaps = new Map();
+    for (const busId of busIds) {
+      const busSnap = await tx.get(db.collection('buses').doc(busId));
+      if (busSnap.exists) busSnaps.set(busId, busSnap);
+    }
+
+    const now = new Date();
+    for (const childId of plan.childIdsToReset) {
+      const childSnap = childSnaps.get(childId);
+      if (!childSnap?.exists) continue;
+      tx.set(childSnap.ref, {
+        tripId: null,
+        busId: null,
+        busStopId: FieldValue.delete(),
+        assignmentStatus: 'pending',
+        hasBoarded: false,
+        hasArrived: false,
+        updatedAt: now,
+      }, { merge: true });
+    }
+
+    for (const { busId, childIds } of plan.busChildRemovals) {
+      const busSnap = busSnaps.get(busId);
+      if (!busSnap || childIds.length === 0) continue;
+      const update = {
+        childIds: FieldValue.arrayRemove(...childIds),
+        updatedAt: now,
+      };
+      if (busId === plan.activeBusId) {
+        update.status = 'waiting';
+        update.estimatedArrival = null;
+      }
+      tx.set(busSnap.ref, update, { merge: true });
+    }
+
+    if (plan.activeBusId && !plan.busChildRemovals.some(
+      (item) => item.busId === plan.activeBusId,
+    )) {
+      const activeBusSnap = busSnaps.get(plan.activeBusId);
+      if (activeBusSnap) {
+        tx.set(activeBusSnap.ref, {
+          status: 'waiting',
+          estimatedArrival: null,
+          updatedAt: now,
+        }, { merge: true });
+      }
+    }
+
+    tx.delete(tripRef);
+  });
+
   return { ok: true };
 }
 

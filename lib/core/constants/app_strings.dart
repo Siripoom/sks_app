@@ -428,4 +428,16 @@ class AppStrings {
   static const String deleteAccountConfirm = 'ยืนยันการลบบัญชี';
   static const String deleteAccountSuccess = 'ลบบัญชีสำเร็จ';
   static const String deleteAccountFailed = 'ไม่สามารถลบบัญชีได้';
+  static const String deleteChild = 'ลบนักเรียน';
+  static const String deleteChildTitle = 'ลบข้อมูลนักเรียน';
+  static const String deleteChildMessage =
+      'การลบนักเรียนจะลบข้อมูลนักเรียนออกจากบัญชีของคุณอย่างถาวร และไม่สามารถย้อนกลับได้';
+  static const String deleteChildConfirm = 'ยืนยันการลบ';
+  static const String childDeletedSuccess = 'ลบข้อมูลนักเรียนสำเร็จ';
+  static const String childDeletedFailed = 'ไม่สามารถลบข้อมูลนักเรียนได้';
+  static const String downloadQr = 'ดาวน์โหลด QR';
+  static const String qrSavedSuccess = 'บันทึกรูป QR ลงเครื่องแล้ว';
+  static const String qrSaveFailed = 'ไม่สามารถบันทึกรูป QR ได้';
+  static const String qrSavePermissionDenied =
+      'ไม่ได้รับสิทธิ์เข้าถึงคลังภาพ กรุณาอนุญาตในการตั้งค่า';
 }

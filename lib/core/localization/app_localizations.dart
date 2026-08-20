@@ -179,6 +179,18 @@ class AppLocalizations {
     AppStrings.deleteAccountConfirm: 'Confirm account deletion',
     AppStrings.deleteAccountSuccess: 'Account deleted',
     AppStrings.deleteAccountFailed: 'Unable to delete account',
+    AppStrings.deleteChild: 'Delete student',
+    AppStrings.deleteChildTitle: 'Delete student record',
+    AppStrings.deleteChildMessage:
+        'This permanently removes this student from your account. This action cannot be undone.',
+    AppStrings.deleteChildConfirm: 'Confirm delete',
+    AppStrings.childDeletedSuccess: 'Student deleted',
+    AppStrings.childDeletedFailed: 'Unable to delete student',
+    AppStrings.downloadQr: 'Download QR',
+    AppStrings.qrSavedSuccess: 'QR code saved to your device',
+    AppStrings.qrSaveFailed: 'Unable to save the QR code',
+    AppStrings.qrSavePermissionDenied:
+        'Photo library access denied. Please allow it in Settings.',
     AppStrings.mapSection: 'Map',
     AppStrings.todayTrip: "Today's trip",
     AppStrings.studentStatus: 'Student status',

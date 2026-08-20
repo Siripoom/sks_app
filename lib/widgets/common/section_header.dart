@@ -25,7 +25,12 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppSurfaceCard(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      margin: EdgeInsets.fromLTRB(
+        16,
+        MediaQuery.of(context).padding.top + 16,
+        16,
+        0,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       borderRadius: BorderRadius.circular(28),
       color: AppColors.primaryDark,

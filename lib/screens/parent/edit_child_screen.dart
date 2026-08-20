@@ -38,13 +38,15 @@ class _EditChildScreenState extends State<EditChildScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.child.name);
     _gradeController = TextEditingController(text: widget.child.gradeLevel);
-    _emergencyContactNameController =
-        TextEditingController(text: widget.child.emergencyContactName);
-    _emergencyContactPhoneController =
-        TextEditingController(text: widget.child.emergencyContactPhone);
+    _emergencyContactNameController = TextEditingController(
+      text: widget.child.emergencyContactName,
+    );
+    _emergencyContactPhoneController = TextEditingController(
+      text: widget.child.emergencyContactPhone,
+    );
     _selectedSchoolId = widget.child.schoolId;
-    _selectedLocation = widget.child.pickupLat != null &&
-            widget.child.pickupLng != null
+    _selectedLocation =
+        widget.child.pickupLat != null && widget.child.pickupLng != null
         ? PickupLocationResult(
             lat: widget.child.pickupLat!,
             lng: widget.child.pickupLng!,
@@ -97,6 +99,51 @@ class _EditChildScreenState extends State<EditChildScreen> {
     setState(() => _selectedPhoto = null);
   }
 
+  Future<void> _handleDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.tr(AppStrings.deleteChildTitle)),
+        content: Text(context.tr(AppStrings.deleteChildMessage)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.statusRed),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.tr(AppStrings.deleteChildConfirm)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    final parentProvider = context.read<ParentProvider>();
+    final success = await parentProvider.deleteChild(widget.child.id);
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr(AppStrings.childDeletedSuccess))),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(context.tr(AppStrings.childDeletedFailed)),
+        backgroundColor: AppColors.statusRed,
+      ),
+    );
+  }
+
   bool _hasRequiredFields() {
     return _nameController.text.trim().isNotEmpty &&
         _selectedSchoolId.isNotEmpty &&
@@ -122,8 +169,7 @@ class _EditChildScreenState extends State<EditChildScreen> {
       return;
     }
 
-    final school =
-        schools.where((s) => s.id == _selectedSchoolId).firstOrNull;
+    final school = schools.where((s) => s.id == _selectedSchoolId).firstOrNull;
 
     final updatedChild = widget.child.copyWith(
       name: _nameController.text.trim(),
@@ -153,7 +199,16 @@ class _EditChildScreenState extends State<EditChildScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr(AppStrings.editChild))),
+      appBar: AppBar(
+        title: Text(context.tr(AppStrings.editChild)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.statusRed),
+            tooltip: context.tr(AppStrings.deleteChild),
+            onPressed: _handleDelete,
+          ),
+        ],
+      ),
       body: FutureBuilder<List<School>>(
         future: _schoolsFuture,
         builder: (context, snapshot) {
@@ -178,6 +233,8 @@ class _EditChildScreenState extends State<EditChildScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedSchoolId.isEmpty ? null : _selectedSchoolId,
+                    isExpanded: true,
+                    itemHeight: null,
                     decoration: InputDecoration(
                       labelText: context.tr(AppStrings.schoolName),
                     ),
@@ -185,7 +242,11 @@ class _EditChildScreenState extends State<EditChildScreen> {
                         .map(
                           (school) => DropdownMenuItem(
                             value: school.id,
-                            child: Text(school.name),
+                            child: Text(
+                              school.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
@@ -261,8 +322,8 @@ class _EditChildScreenState extends State<EditChildScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: snapshot.connectionState ==
-                              ConnectionState.done
+                      onPressed:
+                          snapshot.connectionState == ConnectionState.done
                           ? () => _handleSave(schools)
                           : null,
                       child: Text(context.tr(AppStrings.save)),
@@ -278,8 +339,7 @@ class _EditChildScreenState extends State<EditChildScreen> {
   }
 
   Widget _buildPhotoSection() {
-    final localProvider =
-        imageProviderFromPath(_selectedPhoto?.path ?? '');
+    final localProvider = imageProviderFromPath(_selectedPhoto?.path ?? '');
     final hasNetworkPhoto = widget.child.photoUrl.isNotEmpty;
 
     ImageProvider? displayProvider;

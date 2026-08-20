@@ -40,6 +40,8 @@
 	<string>SmartKids uses your location to show your current position and update the school bus location during active trips.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to let parents choose a child photo.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SmartKids saves the child's QR code image to your photo library when you download it.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

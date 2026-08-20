@@ -190,6 +190,7 @@ behavior สำคัญ:
 | Preview route | `buses`, `children`, `schools` | callable `manageTrip` action `calculateRoute` | derive schools/stops, validate conflicts และคืน input hash |
 | Create / edit trip | related records | callable `manageTrip` action `create` / `update` | backend สร้าง canonical grouped stops และ sync child assignment |
 | Archive / restore trip | `trips`, `children`, `parents` | callable `manageTrip` action `archive` / `restore` | archive unassign เด็ก; legacy draft/archived convert เมื่อแก้ |
+| Delete trip | `trips`, `children`, `buses` | callable `manageTrip` action `delete` | ลบถาวรทุกสถานะ, unassign เด็ก และคืน active bus เป็น `waiting` |
 
 field หลักที่ UI ส่งตอน create/edit:
 
@@ -425,8 +426,9 @@ Flutter และ Web ใช้ callable สำหรับ structural writes:
 - `manageBus`
 - `manageTrip`
 
-`manageTrip` รองรับ `calculateRoute`, `create`, `update`, `archive`, `restore` และ `status`.
+`manageTrip` รองรับ `calculateRoute`, `create`, `update`, `archive`, `restore`, `delete` และ `setStatus`.
 `calculateRoute` รับ `busId`, `round`, วันที่/เวลา, `childIds`, `origin` และ optional `manual`; response คืน canonical stops, `schoolIds`, metrics, polylines และ `inputHash`.
+`delete` รับ `id`, ลบทริปได้ทุกสถานะ, unassign เด็กที่ยังชี้มาทริป และคืน active bus เป็น `waiting`.
 
 Route Optimization ใช้ `optimizeTours` สอง phase. Runtime service account ต้องมี `routeoptimization.locations.use` และ project ต้องเปิด Route Optimization API/billing. Deploy Functions ก่อน release Web/Flutter แล้วจึง deploy strict Rules.
 
@@ -447,7 +449,7 @@ Dynamic driver routing ต้องเปิด Google Maps Routes API และ
 - ห้าม reorder stop ข้าม phase และ save ต้องใช้ input hash ล่าสุด
 - ห้าม bus ซ้ำใน open trip รอบเดียวกันของ `serviceDateKey`
 - ห้าม child ซ้ำใน open trip รอบเดียวกันของ `serviceDateKey`
-- ตอน archive child / remove child from trip / archive trip ต้อง sync ค่า `tripId`, `busId`, `assignmentStatus`, `hasBoarded`, `hasArrived`
+- ตอน archive child / remove child from trip / archive หรือ delete trip ต้อง sync ค่า `tripId`, `busId`, `assignmentStatus`, `hasBoarded`, `hasArrived`
 - ตอนเปลี่ยน child-parent relation ต้อง sync `parents.childIds`
 - ตอน child set เปลี่ยน ต้อง sync `parents.schoolIds`
 - ตอนเปลี่ยน bus-driver relation ต้อง sync ทั้ง `buses.driverId` และ `drivers.busId`

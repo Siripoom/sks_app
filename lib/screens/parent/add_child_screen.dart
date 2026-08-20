@@ -173,6 +173,8 @@ class _AddChildScreenState extends State<AddChildScreen> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedSchoolId.isEmpty ? null : _selectedSchoolId,
+                    isExpanded: true,
+                    itemHeight: null,
                     decoration: InputDecoration(
                       labelText: context.tr(AppStrings.schoolName),
                     ),
@@ -180,7 +182,11 @@ class _AddChildScreenState extends State<AddChildScreen> {
                         .map(
                           (school) => DropdownMenuItem(
                             value: school.id,
-                            child: Text(school.name),
+                            child: Text(
+                              school.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
@@ -232,7 +238,10 @@ class _AddChildScreenState extends State<AddChildScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.map_outlined, color: Color(0xFF6B7280)),
+                          const Icon(
+                            Icons.map_outlined,
+                            color: Color(0xFF6B7280),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -252,13 +261,17 @@ class _AddChildScreenState extends State<AddChildScreen> {
                   const SizedBox(height: 12),
                   Text(
                     context.tr(AppStrings.pendingAssignmentHint),
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: snapshot.connectionState == ConnectionState.done
+                      onPressed:
+                          snapshot.connectionState == ConnectionState.done
                           ? () => _handleSave(schools)
                           : null,
                       child: Text(context.tr(AppStrings.save)),

@@ -39,9 +39,7 @@ class ParentProvider extends ChangeNotifier {
 
   TripStop? myChildStop(String childId) {
     if (_watchedTrip == null) return null;
-    return _watchedTrip!.stops
-        .where((s) => s.childId == childId)
-        .firstOrNull;
+    return _watchedTrip!.stops.where((s) => s.childId == childId).firstOrNull;
   }
 
   int stopsRemaining(String childId) {
@@ -119,6 +117,10 @@ class ParentProvider extends ChangeNotifier {
 
   Future<bool> updateChild(Child child, {XFile? photo}) {
     return _childService.updateChild(child, photo: photo);
+  }
+
+  Future<bool> deleteChild(String childId) {
+    return _childService.deleteChild(childId);
   }
 
   Child? getChild(String childId) {
